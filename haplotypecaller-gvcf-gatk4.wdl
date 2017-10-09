@@ -137,7 +137,6 @@ task MergeGVCFs {
   String vcf_name
   String vcf_index
 
-  Int compression_level
   Int preemptible_tries
   Int disk_size
   String mem_size
@@ -147,7 +146,7 @@ task MergeGVCFs {
   String java_opt
 
   command {
-    java -Dsamjdk.compression_level=${compression_level} ${java_opt} -jar ${picard_path}picard.jar \
+    java ${java_opt} -jar ${picard_path}picard.jar \
       MergeVcfs \
       INPUT=${sep=' INPUT=' input_vcfs} \
       OUTPUT=${vcf_name}
