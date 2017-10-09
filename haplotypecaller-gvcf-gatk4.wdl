@@ -35,6 +35,12 @@ workflow HaplotypeCallerGvcf_GATK4 {
   File ref_fasta
   File ref_fasta_index
   File scattered_calling_intervals_list
+
+  String picard_docker
+  String gatk_docker
+
+  String picard_path
+  String gatk_launch_path
   
   Array[File] scattered_calling_intervals = read_lines(scattered_calling_intervals_list)
 
@@ -53,26 +59,28 @@ workflow HaplotypeCallerGvcf_GATK4 {
         input_bam_index = input_bam_index,
         interval_list = interval_file,
         gvcf_name = gvcf_name,
-        gvcf_index = gvcf_index,
         ref_dict = ref_dict,
         ref_fasta = ref_fasta,
-        ref_fasta_index = ref_fasta_index
+        ref_fasta_index = ref_fasta_index,
+        docker_image = gatk_docker,
+        gatk_launch_path = gatk_launch_path
     }
   }
 
   # Merge per-interval GVCFs
-  call MergeVCFs {
+  call MergeGVCFs {
     input:
       input_vcfs = HaplotypeCaller.output_gvcf,
-      input_vcfs_indices = HaplotypeCaller.output_gvcf_index,
       vcf_name = gvcf_name,
-      vcf_index = gvcf_index
+      vcf_index = gvcf_index,
+      docker_image = picard_docker,
+      picard_path = picard_path
   }
 
   # Outputs that will be retained when execution is complete
   output {
-    File output_merged_gvcf = MergeVCFs.output_vcf
-    File output_merged_gvcf_index = MergeVCFs.output_vcf_index
+    File output_merged_gvcf = MergeGVCFs.output_vcf
+    File output_merged_gvcf_index = MergeGVCFs.output_vcf_index
   }
 }
 
@@ -83,7 +91,6 @@ task HaplotypeCaller {
   File input_bam
   File input_bam_index
   String gvcf_name
-  String gvcf_index
   File ref_dict
   File ref_fasta
   File ref_fasta_index
@@ -97,12 +104,12 @@ task HaplotypeCaller {
   String mem_size
 
   String docker_image
-  String gatk_path
+  String gatk_launch_path
   String java_opt
 
   command {
-    ${gatk_launch_path}gatk-launch --javaOptions "${java_opt}" \ \
-      -T HaplotypeCaller \
+    ${gatk_launch_path}gatk-launch --javaOptions ${java_opt} \
+      HaplotypeCaller \
       -R ${ref_fasta} \
       -I ${input_bam} \
       -O ${gvcf_name} \
@@ -110,8 +117,7 @@ task HaplotypeCaller {
       -ip ${default=100 interval_padding} \
       -contamination ${default=0 contamination} \
       --max_alternate_alleles ${default=3 max_alt_alleles} \
-      --read_filter OverclippedRead \
-      -ERC GVCF 
+      -ERC GVCF
   }
 
   runtime {
@@ -122,14 +128,12 @@ task HaplotypeCaller {
 
   output {
     File output_gvcf = "${gvcf_name}"
-    File output_gvcf_index = "${gvcf_index}"
   }
 }
 
 # Merge GVCFs generated per-interval for the same sample
-task MergeVCFs {
+task MergeGVCFs {
   Array [File] input_vcfs
-  Array [File] input_vcfs_indices
   String vcf_name
   String vcf_index
 

@@ -13,25 +13,29 @@
   "HaplotypeCallerGvcf_GATK4.HaplotypeCaller.interval_padding": 100,
 
   "##_COMMENT4": "MISC PARAMETERS", 
-  "HaplotypeCallerGvcf_GATK4.MergeVCFs.compression_level": 5,
+  "HaplotypeCallerGvcf_GATK4.MergeGVCFs.compression_level": 5,
 
-  "##_COMMENT5": "DOCKERS (using gotc for picard now but will switch to picard-only docker when available)", 
-  "HaplotypeCallerGvcf_GATK4.picard_docker": "broadinstitute/genomes-in-the-cloud:2.3.0-1501082129",
+  "##_COMMENT5": "DOCKERS (using 'picard:latest' for now but will use version tag when available)", 
+  "HaplotypeCallerGvcf_GATK4.picard_docker": "broadinstitute/picard:latest",
   "HaplotypeCallerGvcf_GATK4.gatk_docker": "broadinstitute/gatk:4.beta.5",
   
   "##_COMMENT6": "PATHS", 
-  "HaplotypeCallerGvcf_GATK4.HaplotypeCaller.gatk_path": "/usr/",
-  "HaplotypeCallerGvcf_GATK4.MergeVCFs.picard_path": "/usr/gitc/",
+  "HaplotypeCallerGvcf_GATK4.gatk_launch_path": "/gatk/",
+  "HaplotypeCallerGvcf_GATK4.picard_path": "/usr/gitc/",
 
   "##_COMMENT7": "JAVA OPTIONS", 
   "HaplotypeCallerGvcf_GATK4.HaplotypeCaller.java_opt": "-Xms8000m",
-  "HaplotypeCallerGvcf_GATK4.MergeVCFs.java_opt": "-Xms2000m",
+  "HaplotypeCallerGvcf_GATK4.MergeGVCFs.java_opt": "-Xms2000m",
 
   "##_COMMENT8": "MEMORY ALLOCATION", 
   "HaplotypeCallerGvcf_GATK4.HaplotypeCaller.mem_size": "10 GB",
-  "HaplotypeCallerGvcf_GATK4.MergeVCFs.mem_size": "3 GB",
+  "HaplotypeCallerGvcf_GATK4.MergeGVCFs.mem_size": "3 GB",
 
   "##_COMMENT9": "DISK SIZE ALLOCATION",
   "HaplotypeCallerGvcf_GATK4.HaplotypeCaller.disk_size": 100,
-  "HaplotypeCallerGvcf_GATK4.MergeVCFs.disk_size": 100
+  "HaplotypeCallerGvcf_GATK4.MergeGVCFs.disk_size": 100,
+
+  "##_COMMENT9": "PREEMPTION",
+  "HaplotypeCallerGvcf_GATK4.HaplotypeCaller.preemptible_tries": 3,
+  "HaplotypeCallerGvcf_GATK4.MergeGVCFs.preemptible_tries": 3
 }
