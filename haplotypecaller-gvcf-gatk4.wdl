@@ -108,7 +108,7 @@ task HaplotypeCaller {
   String java_opt
 
   command {
-    ${gatk_launch_path}gatk-launch --javaOptions ${java_opt} \
+    ${gatk_launch_path}gatk-launch --javaOptions "${java_opt}" \
       HaplotypeCaller \
       -R ${ref_fasta} \
       -I ${input_bam} \

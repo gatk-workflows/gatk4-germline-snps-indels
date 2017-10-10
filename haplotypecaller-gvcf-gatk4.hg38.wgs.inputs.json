@@ -12,7 +12,7 @@
   "HaplotypeCallerGvcf_GATK4.scattered_calling_intervals_list": "gs://gatk-test-data/intervals/hg38_wgs_scattered_calling_intervals.txt",
   "HaplotypeCallerGvcf_GATK4.HaplotypeCaller.interval_padding": 100,
 
-  "##_COMMENT4": "DOCKERS (using 'picard:latest' for now but will use version tag when available)", 
+  "##_COMMENT4": "DOCKERS", 
   "HaplotypeCallerGvcf_GATK4.picard_docker": "vdauwera/picard:2.13.2",
   "HaplotypeCallerGvcf_GATK4.gatk_docker": "broadinstitute/gatk:4.beta.5",
   
