@@ -362,7 +362,7 @@ task BuildVQSRModel {
             -R ${ref_fasta} \
             -input ${cohort_vcf} \
             -L ${interval_list} \
-            -resource:${sep=' -resource:' resources} \
+            -resource ${sep=' -resource ' resources} \
             -an ${sep=' -an ' annotations} \
             -mode ${mode} \
             -tranche ${sep=' -tranche ' tranches} \

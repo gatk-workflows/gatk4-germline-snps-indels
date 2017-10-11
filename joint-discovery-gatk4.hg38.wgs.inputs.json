@@ -33,15 +33,15 @@
     "gs://broad-references/hg38/v0/Axiom_Exome_Plus.genotypes.all_populations.poly.hg38.vcf.gz.tbi"
   ],
   "JointDiscovery_GATK4.SNP_resources": [ 
-    "hapmap,known=false,training=true,truth=true,prior=15.0:broad-references/hg38/v0/hapmap_3.3.hg38.vcf.gz",
-    "omni,known=false,training=true,truth=true,prior=12.0:broad-references/hg38/v0/1000G_omni2.5.hg38.vcf.gz",
-    "1000G,known=false,training=true,truth=false,prior=10.0:broad-references/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz",
-    "dbsnp,known=true,training=false,truth=false,prior=2.0:broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf"
+    "hapmap,known=false,training=true,truth=true,prior=15.0:/cromwell_root/broad-references/hg38/v0/hapmap_3.3.hg38.vcf.gz",
+    "omni,known=false,training=true,truth=true,prior=12.0:/cromwell_root/broad-references/hg38/v0/1000G_omni2.5.hg38.vcf.gz",
+    "1000G,known=false,training=true,truth=false,prior=10.0:/cromwell_root/broad-references/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz",
+    "dbsnp,known=true,training=false,truth=false,prior=2.0:/cromwell_root/broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf"
   ],
   "JointDiscovery_GATK4.INDEL_resources": [
-    "mills,known=false,training=true,truth=true,prior=12.0:broad-references/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
-    "dbsnp,known=true,training=false,truth=false,prior=2.0:broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
-    "axiomPoly,known=false,training=true,truth=false,prior=10:broad-references/hg38/v0/Axiom_Exome_Plus.genotypes.all_populations.poly.hg38.vcf.gz"
+    "mills,known=false,training=true,truth=true,prior=12.0:/cromwell_root/broad-references/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
+    "dbsnp,known=true,training=false,truth=false,prior=2.0:/cromwell_root/broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
+    "axiomPoly,known=false,training=true,truth=false,prior=10:/cromwell_root/broad-references/hg38/v0/Axiom_Exome_Plus.genotypes.all_populations.poly.hg38.vcf.gz"
   ],
 
   "##_COMMENT5": "VQSR PARAMETERS",
