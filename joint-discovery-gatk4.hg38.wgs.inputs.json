@@ -1,0 +1,92 @@
+{
+  "##_COMMENT1": "INPUT GVCFs & COHORT -- DATASET-SPECIFC, MUST BE ADAPTED",
+  "JointDiscovery_GATK4.cohort_vcf_name": "NA12878_hg38",
+  "JointDiscovery_GATK4.input_gvcfs_list": "gs://gatk-test-data/wgs_gvcf/PlatinumGenomes_hg38/PlatinumGenomes_hg38.gvcf_list",
+  "JointDiscovery_GATK4.input_gvcfs_indices_list": "gs://gatk-test-data/wgs_gvcf/PlatinumGenomes_hg38/PlatinumGenomes_hg38.gvcf_index_list",
+  "JointDiscovery_GATK4.sample_name_map" : "gs://gatk-test-data/wgs_gvcf/PlatinumGenomes_hg38/PlatinumGenomes_hg38.sample_map",
+
+  "##_COMMENT2": "REFERENCE FILES",
+  "JointDiscovery_GATK4.ref_dict": "gs://broad-references/hg38/v0/Homo_sapiens_assembly38.dict",
+  "JointDiscovery_GATK4.ref_fasta": "gs://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
+  "JointDiscovery_GATK4.ref_fasta_index": "gs://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+
+  "##_COMMENT3": "INTERVALS",
+  "JointDiscovery_GATK4.calling_intervals_list": "gs://gatk-test-data/intervals/wgs_calling_regions.hg38.intervals",
+  
+  "##_COMMENT4": "RESOURCE FILES",
+  "JointDiscovery_GATK4.dbsnp_vcf": "gs://broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
+  "JointDiscovery_GATK4.dbsnp_vcf_index": "gs://broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
+  "JointDiscovery_GATK4.resource_files": [ 
+    "gs://broad-references/hg38/v0/hapmap_3.3.hg38.vcf.gz",
+    "gs://broad-references/hg38/v0/1000G_omni2.5.hg38.vcf.gz",
+    "gs://broad-references/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz",
+    "gs://broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
+    "gs://broad-references/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
+    "gs://broad-references/hg38/v0/Axiom_Exome_Plus.genotypes.all_populations.poly.hg38.vcf.gz"
+  ],
+  "JointDiscovery_GATK4.resource_indices": [ 
+    "gs://broad-references/hg38/v0/hapmap_3.3.hg38.vcf.gz.tbi",
+    "gs://broad-references/hg38/v0/1000G_omni2.5.hg38.vcf.gz.tbi",
+    "gs://broad-references/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz.tbi",
+    "gs://broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
+    "gs://broad-references/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz.tbi",
+    "gs://broad-references/hg38/v0/Axiom_Exome_Plus.genotypes.all_populations.poly.hg38.vcf.gz.tbi"
+  ],
+  "JointDiscovery_GATK4.SNP_resources": [ 
+    "hapmap,known=false,training=true,truth=true,prior=15:/cromwell_root/broad-references/hg38/v0/hapmap_3.3.hg38.vcf.gz",
+    "omni,known=false,training=true,truth=true,prior=12:/cromwell_root/broad-references/hg38/v0/1000G_omni2.5.hg38.vcf.gz",
+    "1000G,known=false,training=true,truth=false,prior=10:/cromwell_root/broad-references/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz",
+    "dbsnp,known=true,training=false,truth=false,prior=2:/cromwell_root/broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf"
+  ],
+  "JointDiscovery_GATK4.INDEL_resources": [
+    "mills,known=false,training=true,truth=true,prior=12.0:/cromwell_root/broad-references/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
+    "dbsnp,known=true,training=false,truth=false,prior=2.0:/cromwell_root/broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
+    "axiomPoly,known=false,training=true,truth=false,prior=10:/cromwell_root/broad-references/hg38/v0/Axiom_Exome_Plus.genotypes.all_populations.poly.hg38.vcf.gz"
+  ],
+
+  "##_COMMENT5": "VQSR PARAMETERS",
+  "JointDiscovery_GATK4.BuildVQSRModelForSNPs.maxGaussians": 6,
+  "JointDiscovery_GATK4.BuildVQSRModelForINDELs.maxGaussians": 4,
+  "JointDiscovery_GATK4.SNP_annotations": ["DP", "QD", "FS", "SOR", "MQ", "MQRankSum", "ReadPosRankSum"],
+  "JointDiscovery_GATK4.INDEL_annotations": ["QD", "FS", "SOR", "MQRankSum", "ReadPosRankSum"],
+  "JointDiscovery_GATK4.SNP_filter_level": 99.7,
+  "JointDiscovery_GATK4.INDEL_filter_level": 99.7,
+  "JointDiscovery_GATK4.SNP_tranches": [100.0, 99.99, 99.95, 99.9, 99.8, 99.7, 99.6, 99.5, 99.4, 99.3, 99.2, 99.1, 99.0, 98.0, 97.0, 96.0, 95.0, 90.0],
+  "JointDiscovery_GATK4.INDEL_tranches": [100.0, 99.99, 99.95, 99.9, 99.8, 99.7, 99.6, 99.5, 99.0, 98.0, 97.0, 96.0, 95.0, 94.0, 93.0, 92.0, 91.0, 90.0],
+
+  "##_COMMENT4": "DOCKERS", 
+  "JointDiscovery_GATK4.picard_docker": "vdauwera/picard:2.13.2",
+  "JointDiscovery_GATK4.gatk_docker": "broadinstitute/gatk:4.beta.5",
+
+  "##_COMMENT5": "PATHS", 
+  "JointDiscovery_GATK4.gatk_launch_path": "/gatk/",
+  "JointDiscovery_GATK4.picard_path": "/usr/",
+
+  "##_COMMENT6": "JAVA OPTIONS", 
+  "JointDiscovery_GATK4.ImportGVCFs.java_opt": "-Xmx4g -Xms4g",
+  "JointDiscovery_GATK4.GenotypeGVCFs.java_opt": "-Xms8000m",
+  "JointDiscovery_GATK4.MergeVCFs.java_opt": "-Xms2000m",
+  "JointDiscovery_GATK4.BuildVQSRModelForSNPs.java_opt": "-Xms8000m",
+  "JointDiscovery_GATK4.BuildVQSRModelForINDELs.java_opt": "-Xms8000m",
+  "JointDiscovery_GATK4.ApplyRecalibrationFilterForSNPs.java_opt": "-Xms4000m",
+  "JointDiscovery_GATK4.ApplyRecalibrationFilterForINDELs.java_opt": "-Xms4000m",
+
+  "##_COMMENT7": "MEMORY ALLOCATION", 
+  "JointDiscovery_GATK4.ImportGVCFs.mem_size": "7 GB",
+  "JointDiscovery_GATK4.GenotypeGVCFs.mem_size": "7 GB",
+  "JointDiscovery_GATK4.MergeVCFs.mem_size": "2 GB",
+  "JointDiscovery_GATK4.BuildVQSRModelForSNPs.mem_size": "5 GB",
+  "JointDiscovery_GATK4.BuildVQSRModelForINDELs.mem_size": "5 GB",
+  "JointDiscovery_GATK4.ApplyRecalibrationFilterForSNPs.mem_size": "5 GB",
+  "JointDiscovery_GATK4.ApplyRecalibrationFilterForINDELs.mem_size": "5 GB",
+
+  "##_COMMENT8": "DISK SIZE ALLOCATION",
+  "JointDiscovery_GATK4.ImportGVCFs.disk_size": 100,
+  "JointDiscovery_GATK4.GenotypeGVCFs.disk_size": 100,
+  "JointDiscovery_GATK4.MergeVCFs.disk_size": 100,
+  "JointDiscovery_GATK4.BuildVQSRModelForSNPs.disk_size": 100,
+  "JointDiscovery_GATK4.BuildVQSRModelForINDELs.disk_size": 100,
+  "JointDiscovery_GATK4.ApplyRecalibrationFilterForSNPs.disk_size": 100,
+  "JointDiscovery_GATK4.ApplyRecalibrationFilterForINDELs.disk_size": 100
+}
+
