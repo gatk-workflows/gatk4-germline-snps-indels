@@ -1,7 +1,8 @@
 # gatk4-germline-snps-indels
 
 ### Purpose : 
-Workflows for germline short variant discovery with GATK4
+Workflows for germline short variant discovery with GATK4. 
+ 
 Gatk Germiline SNPs Indels is composed of two WDLs, haplotypeCaller-gvcf-gatk4 and
 joint-discovery-gatk4.The haplotypecaller-gvcf-gatk4 workflow runs HaplotypeCaller 
 from GATK4 in GVCF mode on a single sample according to the GATK Best Practices (June 2016), 
