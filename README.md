@@ -1,6 +1,6 @@
 # gatk4-germline-snps-indels
 
-###Purpose : 
+### Purpose : 
 Workflows for germline short variant discovery with GATK4
 Gatk Germiline SNPs Indels is composed of two WDLs, haplotypeCaller-gvcf-gatk4 and
 joint-discovery-gatk4.The haplotypecaller-gvcf-gatk4 workflow runs HaplotypeCaller 
@@ -9,28 +9,28 @@ scattered across intervals.The second WDL implements the joint discovery and VQS
 filtering portion of the GATK Best Practices (June 2016) for germline SNP and Indel 
 discovery in human whole-genome sequencing (WGS) and exome sequencing data.
 
-###haplotypecaller-gvcf-gatk :
-####Requirements/expectations
+### haplotypecaller-gvcf-gatk :
+#### Requirements/expectations
 - One analysis-ready BAM file for a single sample (as identified in RG:SM)
 - Set of variant calling intervals lists for the scatter, provided in a file
-####Outputs 
+#### Outputs 
 - One GVCF file and its index
 
-###joint-discovery-gatk :
-####Requirements/expectations
+### joint-discovery-gatk :
+#### Requirements/expectations
 - One or more GVCFs produced by HaplotypeCaller in GVCF mode
 - Bare minimum 1 WGS sample or 30 Exome samples. Gene panels are not supported.
-####Outputs 
+#### Outputs 
 - A VCF file and its index, filtered using variant quality score recalibration  
   (VQSR) with genotypes for all samples present in the input VCF. All sites that  
   are present in the input VCF are retained; filtered sites are annotated as such  
   in the FILTER field.
 
-###Cromwell version support : 
+### Cromwell version support : 
 - Successfully tested on v29
 - Does not work on versions < v23 due to output syntax
 
-###IMPORTANT NOTE : 
+### IMPORTANT NOTE : 
 - Runtime parameters are optimized for Broad's Google Cloud Platform implementation.
 - HaplotypeCaller in GATK4 is still in evaluation phase and should not
   be used in production until it has been fully vetted. In the meantime, use the GATK3 
