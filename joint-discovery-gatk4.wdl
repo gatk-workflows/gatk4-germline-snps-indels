@@ -119,9 +119,6 @@ workflow JointDiscovery_GATK4 {
     # Build SNP model 
     call BuildVQSRModel as BuildVQSRModelForSNPs {
         input:
-            ref_dict = ref_dict,
-            ref_fasta = ref_fasta,
-            ref_fasta_index = ref_fasta_index,
             cohort_vcf = MergeVCFs.output_vcf,
             cohort_vcf_index = MergeVCFs.output_vcf_index,
             interval_list = calling_intervals_list,
@@ -139,9 +136,6 @@ workflow JointDiscovery_GATK4 {
     # Build INDEL model 
     call BuildVQSRModel as BuildVQSRModelForINDELs {
         input:
-            ref_dict = ref_dict,
-            ref_fasta = ref_fasta,
-            ref_fasta_index = ref_fasta_index,
             cohort_vcf = MergeVCFs.output_vcf,
             cohort_vcf_index = MergeVCFs.output_vcf_index,
             interval_list = calling_intervals_list,
@@ -159,9 +153,6 @@ workflow JointDiscovery_GATK4 {
     # Apply INDEL filter (first because INDEL model is usually done sooner)
     call ApplyRecalibrationFilter as ApplyRecalibrationFilterForINDELs {
         input:
-            ref_dict = ref_dict,
-            ref_fasta = ref_fasta,
-            ref_fasta_index = ref_fasta_index,
             cohort_vcf = MergeVCFs.output_vcf,
             cohort_vcf_index = MergeVCFs.output_vcf_index,
             interval_list = calling_intervals_list,
@@ -178,9 +169,6 @@ workflow JointDiscovery_GATK4 {
     # Apply SNP filter
     call ApplyRecalibrationFilter as ApplyRecalibrationFilterForSNPs {
         input:
-            ref_dict = ref_dict,
-            ref_fasta = ref_fasta,
-            ref_fasta_index = ref_fasta_index,
             cohort_vcf = ApplyRecalibrationFilterForINDELs.recalibrated_vcf,
             cohort_vcf_index = ApplyRecalibrationFilterForINDELs.recalibrated_vcf_index,
             interval_list = calling_intervals_list,
