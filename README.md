@@ -2,15 +2,12 @@
 
 ### Purpose : 
 Workflows for germline short variant discovery with GATK4. 
- 
-Gatk Germiline SNPs Indels is composed of two WDLs, haplotypeCaller-gvcf-gatk4 and
-joint-discovery-gatk4.The haplotypecaller-gvcf-gatk4 workflow runs HaplotypeCaller 
-from GATK4 in GVCF mode on a single sample according to the GATK Best Practices (June 2016), 
-scattered across intervals.The second WDL implements the joint discovery and VQSR 
-filtering portion of the GATK Best Practices (June 2016) for germline SNP and Indel 
-discovery in human whole-genome sequencing (WGS) and exome sequencing data.
 
 ### haplotypecaller-gvcf-gatk :
+The haplotypecaller-gvcf-gatk4 workflow runs HaplotypeCaller 
+from GATK4 in GVCF mode on a single sample according to the GATK Best Practices (June 2016), 
+scattered across intervals.
+
 #### Requirements/expectations
 - One analysis-ready BAM file for a single sample (as identified in RG:SM)
 - Set of variant calling intervals lists for the scatter, provided in a file
@@ -18,6 +15,10 @@ discovery in human whole-genome sequencing (WGS) and exome sequencing data.
 - One GVCF file and its index
 
 ### joint-discovery-gatk :
+The second WDL implements the joint discovery and VQSR 
+filtering portion of the GATK Best Practices (June 2016) for germline SNP and Indel 
+discovery in human whole-genome sequencing (WGS) and exome sequencing data.
+
 #### Requirements/expectations
 - One or more GVCFs produced by HaplotypeCaller in GVCF mode
 - Bare minimum 1 WGS sample or 30 Exome samples. Gene panels are not supported.
@@ -27,7 +28,13 @@ discovery in human whole-genome sequencing (WGS) and exome sequencing data.
   are present in the input VCF are retained; filtered sites are annotated as such  
   in the FILTER field.
 
-### Cromwell version support : 
+### Software version requirements :
+- GATK 4.beta.3 or later 
+- Picard 2.x
+- Samtools (see gotc docker)
+- Python 2.7
+
+Cromwell version support 
 - Successfully tested on v29
 - Does not work on versions < v23 due to output syntax
 
