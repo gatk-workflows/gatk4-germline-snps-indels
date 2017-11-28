@@ -509,7 +509,7 @@ task IndelsVariantRecalibrator {
       -tranche ${sep=' -tranche ' recalibration_tranche_values} \
       -an ${sep=' -an ' recalibration_annotation_values} \
       -mode INDEL \
-      --maxGaussians 6 \
+      --maxGaussians 4 \
       -resource mills,known=false,training=true,truth=true,prior=12:${mills_resource_vcf} \
       -resource axiomPoly,known=false,training=true,truth=false,prior=10:${axiomPoly_resource_vcf} \
       -resource dbsnp,known=true,training=false,truth=false,prior=2:${dbsnp_resource_vcf}
@@ -617,7 +617,7 @@ task SNPsVariantRecalibratorScattered {
       -mode SNP \
       --input_model ${model_report} \
       -scatterTranches \
-      --maxGaussians 1 \
+      --maxGaussians 6 \
       -resource hapmap,known=false,training=true,truth=true,prior=15:${hapmap_resource_vcf} \
       -resource omni,known=false,training=true,truth=true,prior=12:${omni_resource_vcf} \
       -resource 1000G,known=false,training=true,truth=false,prior=10:${one_thousand_genomes_resource_vcf} \
@@ -738,12 +738,6 @@ task GatherVcfs {
     --input ${sep=" --input " input_vcfs_fofn} \
     --output ${output_vcf_name}
     
-    #/gatk/gatk-launch --javaOptions "-Xmx6g -Xms6g" \
-    #SelectVariants \
-    #--variant ${output_vcf_name} \
-    #--output "/dev/null" \
-    #--createOutputVariantIndex false \
-    #-L chr1:1
     /gatk/gatk-launch --javaOptions "-Xmx6g -Xms6g" \
     IndexFeatureFile \
     --feature_file ${output_vcf_name}
