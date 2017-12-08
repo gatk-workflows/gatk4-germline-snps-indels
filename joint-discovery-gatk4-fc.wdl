@@ -95,7 +95,9 @@ workflow JointGenotyping {
   # Make a 2.5:1 interval number to samples in callset ratio interval list
   Int possible_merge_count = floor(num_of_original_intervals / num_gvcfs / 2.5)
   Int merge_count = if possible_merge_count > 1 then possible_merge_count else 1
-
+  
+  #DynamicalyCombineIntervals combines intervals to an appropriate number for your callset, 
+  #in this workflow we aim for a 2.5:1 interval:sample ratio"
   call DynamicallyCombineIntervals {
     input:
       intervals = unpadded_intervals_file,
