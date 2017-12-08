@@ -22,6 +22,10 @@ discovery in human whole-genome sequencing (WGS) and exome sequencing data.
 #### Requirements/expectations
 - One or more GVCFs produced by HaplotypeCaller in GVCF mode
 - Bare minimum 1 WGS sample or 30 Exome samples. Gene panels are not supported.
+- When deteriming disk size in the json, use the guideline below
+  - small_disk = (num_gvcfs / 10) + 10
+  - medium_disk = (num_gvcfs * 15) + 10
+  - huge_disk = num_gvcfs + 10
 #### Outputs 
 - A VCF file and its index, filtered using variant quality score recalibration  
   (VQSR) with genotypes for all samples present in the input VCF. All sites that  
