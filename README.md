@@ -18,6 +18,7 @@ scattered across intervals.
 The second WDL implements the joint discovery and VQSR 
 filtering portion of the GATK Best Practices (June 2016) for germline SNP and Indel 
 discovery in human whole-genome sequencing (WGS) and exome sequencing data.
+*NOTE: joint-discovery-gatk4-fc.wdl is a slightly modified version of the original to support users interested in running the workflow on [FireCloud](https://software.broadinstitute.org/firecloud/).*
 
 #### Requirements/expectations
 - One or more GVCFs produced by HaplotypeCaller in GVCF mode
