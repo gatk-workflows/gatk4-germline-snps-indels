@@ -14,7 +14,7 @@
 
   "##_COMMENT4": "DOCKERS (using 'picard:latest' for now but will use version tag when available)", 
   "HaplotypeCallerGvcf_GATK4.picard_docker": "vdauwera/picard:2.13.2",
-  "HaplotypeCallerGvcf_GATK4.gatk_docker": "broadinstitute/gatk:4.beta.5",
+  "HaplotypeCallerGvcf_GATK4.gatk_docker": "broadinstitute/gatk:4.beta.6",
   
   "##_COMMENT5": "PATHS", 
   "HaplotypeCallerGvcf_GATK4.gatk_launch_path": "/gatk/",
