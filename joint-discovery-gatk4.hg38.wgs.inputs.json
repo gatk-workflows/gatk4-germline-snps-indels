@@ -1,7 +1,7 @@
 {  
   "##_COMMENT1": "INPUT GVCFs & COHORT -- DATASET-SPECIFC, MUST BE ADAPTED",
-  "JointGenotyping.callset_name": "String",
-  "JointGenotyping.sample_name_map": "File",
+  "JointGenotyping.callset_name": "NA12878",
+  "JointGenotyping.sample_name_map": "gs://gatk-test-data/joint_discovery/NA12878.sample_map",
 
   "##_COMMENT2": "REFERENCE FILES",
   "JointGenotyping.ref_fasta": "gs://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
