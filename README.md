@@ -18,6 +18,7 @@ scattered across intervals.
 The second WDL implements the joint discovery and VQSR 
 filtering portion of the GATK Best Practices (June 2016) for germline SNP and Indel 
 discovery in human whole-genome sequencing (WGS) and exome sequencing data.
+
 *NOTE: joint-discovery-gatk4-fc.wdl is a slightly modified version of the original to support users interested in running the workflow on [FireCloud](https://software.broadinstitute.org/firecloud/).*
 
 #### Requirements/expectations
@@ -58,3 +59,16 @@ Cromwell version support
   recal file being there already, then apply SNP recalibration, then apply INDEL 
   recalibration. This would lead to a longer wall clock time for complete workflow 
   execution. Wiring the INDEL recalibration to be applied first solves the problem.
+- The current version of the posted "Generic germline short variant joint genotyping" 
+  is derived from the Broad production version of the workflow, which was adapted for 
+  large WGS callsets of up to 20K samples.  We believe the results of this workflow run 
+  on a single WGS sample are equally accurate, but there may be some shortcomings when 
+  the workflow is modified and run on small cohorts.  Specifically, modifying the SNP 
+  ApplyRecalibration step for higher specificity may not be effective.  The user can verify 
+  if this is an issue by consulting the gathered SNP tranches file.  If the listed 
+  truthSensitivity in the rightmost column is not well matched to the targetTruthSensitivity 
+  in the leftmost column, then requesting that targetTruthSensitivity from ApplyVQSR will 
+  not use an accurate filtering threshold.  This workflow has not been tested on exomes.  
+  The dynamic scatter interval creating was optimized for genomes.  The scattered SNP 
+  VariantRecalibration may fail because of two few "bad" variants to build the negative model. 
+  Also, apologies that the logging for SNP recalibration is overly verbose.
