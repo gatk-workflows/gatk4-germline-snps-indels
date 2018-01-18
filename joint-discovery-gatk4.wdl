@@ -372,13 +372,13 @@ task ImportGVCFs {
     # a significant amount of non-heap memory for native libraries.
     # Also, testing has shown that the multithreaded reader initialization
     # does not scale well beyond 5 threads, so don't increase beyond that.
-    ${gatk_path} --javaOptions "${java_opt}" \
+    ${gatk_path} --java-options "${java_opt}" \
     GenomicsDBImport \
-    --genomicsDBWorkspace ${workspace_dir_name} \
-    --batchSize ${batch_size} \
+    --genomicsdb-workspace-path ${workspace_dir_name} \
+    --batch-size ${batch_size} \
     -L ${interval} \
-    --sampleNameMap ${sample_name_map} \
-    --readerThreads 5 \
+    --sample-name-map ${sample_name_map} \
+    --reader-threads 5 \
     -ip 500
 
     tar -cf ${workspace_dir_name}.tar ${workspace_dir_name}
@@ -422,14 +422,14 @@ task GenotypeGVCFs {
     tar -xf ${workspace_tar}
     WORKSPACE=$( basename ${workspace_tar} .tar)
 
-    ${gatk_path} --javaOptions "${java_opt}" \
+    ${gatk_path} --java-options "${java_opt}" \
      GenotypeGVCFs \
      -R ${ref_fasta} \
      -O ${output_vcf_filename} \
      -D ${dbsnp_vcf} \
      -G StandardAnnotation \
-     --onlyOutputCallsStartingInIntervals \
-     -newQual \
+     --only-output-calls-starting-in-intervals \
+     -new-qual \
      -V gendb://$WORKSPACE \
      -L ${interval}
   >>>
@@ -465,14 +465,14 @@ task HardFilterAndMakeSitesOnlyVcf {
   command {
     set -e
 
-    ${gatk_path} --javaOptions "${java_opt}" \
+    ${gatk_path} --java-options "${java_opt}" \
       VariantFiltration \
-      --filterExpression "ExcessHet > ${excess_het_threshold}" \
-      --filterName ExcessHet \
+      --filter-expression "ExcessHet > ${excess_het_threshold}" \
+      --filter-name ExcessHet \
       -O ${variant_filtered_vcf_filename} \
       -V ${vcf}
 
-    ${gatk_path} --javaOptions "${java_opt}" \
+    ${gatk_path} --java-options "${java_opt}" \
       MakeSitesOnlyVcf \
       --INPUT ${variant_filtered_vcf_filename} \
       --OUTPUT ${sites_only_vcf_filename}
@@ -519,16 +519,16 @@ task IndelsVariantRecalibrator {
   Int preemptibles
 
   command {
-    ${gatk_path} --javaOptions "${java_opt}" \
+    ${gatk_path} --java-options "${java_opt}" \
       VariantRecalibrator \
       -V ${sites_only_variant_filtered_vcf} \
       -O ${recalibration_filename} \
-      --tranchesFile ${tranches_filename} \
-      -allPoly \
+      --tranches-file ${tranches_filename} \
+      -trust-all-polymorphic \
       -tranche ${sep=' -tranche ' recalibration_tranche_values} \
       -an ${sep=' -an ' recalibration_annotation_values} \
       -mode INDEL \
-      --maxGaussians 4 \
+      --max-gaussians 4 \
       -resource mills,known=false,training=true,truth=true,prior=12:${mills_resource_vcf} \
       -resource axiomPoly,known=false,training=true,truth=false,prior=10:${axiomPoly_resource_vcf} \
       -resource dbsnp,known=true,training=false,truth=false,prior=2:${dbsnp_resource_vcf}
@@ -577,18 +577,18 @@ task SNPsVariantRecalibratorCreateModel {
   Int preemptibles
 
   command {
-    ${gatk_path} --javaOptions "${java_opt}" \
+    ${gatk_path} --java-options "${java_opt}" \
       VariantRecalibrator \
       -V ${sites_only_variant_filtered_vcf} \
       -O ${recalibration_filename} \
-      --tranchesFile ${tranches_filename} \
-      -allPoly \
+      --tranches-file ${tranches_filename} \
+      -trust-all-polymorphic \
       -tranche ${sep=' -tranche ' recalibration_tranche_values} \
       -an ${sep=' -an ' recalibration_annotation_values} \
       -mode SNP \
-      -sampleEvery ${downsampleFactor} \
-      --output_model ${model_report_filename} \
-      --maxGaussians 6 \
+      -sample-every ${downsampleFactor} \
+      --output-model ${model_report_filename} \
+      --max-gaussians 6 \
       -resource hapmap,known=false,training=true,truth=true,prior=15:${hapmap_resource_vcf} \
       -resource omni,known=false,training=true,truth=true,prior=12:${omni_resource_vcf} \
       -resource 1000G,known=false,training=true,truth=false,prior=10:${one_thousand_genomes_resource_vcf} \
@@ -635,18 +635,18 @@ task SNPsVariantRecalibratorScattered {
   Int preemptibles
 
   command {
-    ${gatk_path} --javaOptions "${java_opt}" \
+    ${gatk_path} --java-options "${java_opt}" \
       VariantRecalibrator \
       -V ${sites_only_variant_filtered_vcf} \
       -O ${recalibration_filename} \
-      --tranchesFile ${tranches_filename} \
-      -allPoly \
+      --tranches-file ${tranches_filename} \
+      -trust-all-polymorphic \
       -tranche ${sep=' -tranche ' recalibration_tranche_values} \
       -an ${sep=' -an ' recalibration_annotation_values} \
       -mode SNP \
-      --input_model ${model_report} \
-      -scatterTranches \
-      --maxGaussians 6 \
+      --input-model ${model_report} \
+      -output-tranches-for-scatter \
+      --max-gaussians 6 \
       -resource hapmap,known=false,training=true,truth=true,prior=15:${hapmap_resource_vcf} \
       -resource omni,known=false,training=true,truth=true,prior=12:${omni_resource_vcf} \
       -resource 1000G,known=false,training=true,truth=false,prior=10:${one_thousand_genomes_resource_vcf} \
@@ -699,7 +699,7 @@ task GatherTranches {
 
     cat ${input_fofn} | rev | cut -d '/' -f 1 | rev | awk '{print "tranches/" $1}' > inputs.list
 
-      ${gatk_path} --javaOptions "${java_opt}" \
+      ${gatk_path} --java-options "${java_opt}" \
       GatherTranches \
       --input inputs.list \
       --output ${output_filename}
@@ -741,24 +741,24 @@ task ApplyRecalibration {
   command {
     set -e
 
-    ${gatk_path} --javaOptions "${java_opt}" \
+    ${gatk_path} --java-options "${java_opt}" \
       ApplyVQSR \
       -O tmp.indel.recalibrated.vcf \
       -V ${input_vcf} \
-      --recalFile ${indels_recalibration} \
-      -tranchesFile ${indels_tranches} \
-      -ts_filter_level ${indel_filter_level} \
-      --createOutputVariantIndex true \
+      --recal-file ${indels_recalibration} \
+      -tranches-file ${indels_tranches} \
+      -truth-sensitivity-filter-level ${indel_filter_level} \
+      --create-output-variant-index true \
       -mode INDEL
       
-    ${gatk_path} --javaOptions "${java_opt}" \
+    ${gatk_path} --java-options "${java_opt}" \
       ApplyVQSR \
       -O ${recalibrated_vcf_filename} \
       -V tmp.indel.recalibrated.vcf \
-      --recalFile ${snps_recalibration} \
-      -tranchesFile ${snps_tranches} \
-      -ts_filter_level ${snp_filter_level} \
-      --createOutputVariantIndex true \
+      --recal-file ${snps_recalibration} \
+      -tranches-file ${snps_tranches} \
+      -truth-sensitivity-filter-level ${snp_filter_level} \
+      --create-output-variant-index true \
       -mode SNP
   }
   runtime {
@@ -793,16 +793,16 @@ task GatherVcfs {
     mv ${input_vcfs_fofn} inputs.list
 
     # ignoreSafetyChecks make a big performance difference so we include it in our invocation
-    ${gatk_path} --javaOptions "${java_opt}" \
+    ${gatk_path} --java-options "${java_opt}" \
     GatherVcfsCloud \
-    --ignoreSafetyChecks \
-    --gatherType BLOCK \
+    --ignore-safety-checks \
+    --gather-type BLOCK \
     --input inputs.list \
     --output ${output_vcf_name}
 
-    /gatk/gatk-launch --javaOptions "-Xmx6g -Xms6g" \
+    ${gatk_path} --java-options "-Xmx6g -Xms6g" \
     IndexFeatureFile \
-    --feature_file ${output_vcf_name}
+    --feature-file ${output_vcf_name}
   >>>
   runtime {
     docker: docker_image
@@ -836,7 +836,7 @@ task CollectVariantCallingMetrics {
   Int preemptibles
 
   command {
-    ${gatk_path} --javaOptions "${java_opt}" \
+    ${gatk_path} --java-options "${java_opt}" \
       CollectVariantCallingMetrics \
       --INPUT ${input_vcf} \
       --DBSNP ${dbsnp_vcf} \
@@ -902,7 +902,7 @@ task GatherMetrics {
 
     INPUT=`cat ${input_details_fofn} | rev | cut -d '/' -f 1 | rev | sed s/.variant_calling_detail_metrics//g | awk '{printf("I=metrics/%s ", $1)}'`
 
-    ${gatk_path} --javaOption "${java_opt}" \
+    ${gatk_path} --java-option "${java_opt}" \
     AccumulateVariantCallingMetrics \
     --INPUT $INPUT \
     --OUTPUT ${output_prefix}
