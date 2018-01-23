@@ -36,11 +36,9 @@ workflow HaplotypeCallerGvcf_GATK4 {
   File ref_fasta_index
   File scattered_calling_intervals_list
 
-  String picard_docker
   String gatk_docker
 
-  String picard_path
-  String gatk_launch_path
+  String gatk_path
   
   Array[File] scattered_calling_intervals = read_lines(scattered_calling_intervals_list)
 
@@ -63,7 +61,7 @@ workflow HaplotypeCallerGvcf_GATK4 {
         ref_fasta = ref_fasta,
         ref_fasta_index = ref_fasta_index,
         docker_image = gatk_docker,
-        gatk_launch_path = gatk_launch_path
+        gatk_path = gatk_path
     }
   }
 
@@ -73,8 +71,8 @@ workflow HaplotypeCallerGvcf_GATK4 {
       input_vcfs = HaplotypeCaller.output_gvcf,
       vcf_name = gvcf_name,
       vcf_index = gvcf_index,
-      docker_image = picard_docker,
-      picard_path = picard_path
+      docker_image = gatk_docker,
+      gatk_path = gatk_path
   }
 
   # Outputs that will be retained when execution is complete
@@ -104,11 +102,11 @@ task HaplotypeCaller {
   String mem_size
 
   String docker_image
-  String gatk_launch_path
+  String gatk_path
   String java_opt
 
   command {
-    ${gatk_launch_path}gatk-launch --javaOptions ${java_opt} \
+    ${gatk_path} --java-options ${java_opt} \
       HaplotypeCaller \
       -R ${ref_fasta} \
       -I ${input_bam} \
@@ -116,7 +114,7 @@ task HaplotypeCaller {
       -L ${interval_list} \
       -ip ${default=100 interval_padding} \
       -contamination ${default=0 contamination} \
-      --max_alternate_alleles ${default=3 max_alt_alleles} \
+      --max-alternate-alleles ${default=3 max_alt_alleles} \
       -ERC GVCF
   }
 
@@ -142,14 +140,14 @@ task MergeGVCFs {
   String mem_size
 
   String docker_image
-  String picard_path
+  String gatk_path
   String java_opt
 
   command {
-    java ${java_opt} -jar ${picard_path}picard.jar \
+    ${gatk_path} --java-options ${java_opt} \
       MergeVcfs \
-      INPUT=${sep=' INPUT=' input_vcfs} \
-      OUTPUT=${vcf_name}
+      --INPUT=${sep=' --INPUT=' input_vcfs} \
+      --OUTPUT=${vcf_name}
   }
 
   runtime {
