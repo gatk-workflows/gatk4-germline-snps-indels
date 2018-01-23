@@ -697,11 +697,12 @@ task GatherTranches {
         echo 'Could not copy all the tranches from the cloud' && exit 1
     fi
 
-    cat ${input_fofn} | rev | cut -d '/' -f 1 | rev | awk '{print "tranches/" $1}' > inputs.list
+    #cat ${input_fofn} | rev | cut -d '/' -f 1 | rev | awk '{print "tranches/" $1}' > inputs.list #.list has changed to .args for gatk4, but will change back to .list soon
+    cat ${input_fofn} | rev | cut -d '/' -f 1 | rev | awk '{print "tranches/" $1}' > inputs.args
 
       ${gatk_path} --java-options "${java_opt}" \
       GatherTranches \
-      --input inputs.list \
+      --input inputs.args \
       --output ${output_filename}
   >>>
   runtime {
@@ -790,14 +791,15 @@ task GatherVcfs {
     set -e
 
     # Now using NIO to localize the vcfs but the input file must have a ".list" extension
-    mv ${input_vcfs_fofn} inputs.list
+    #mv ${input_vcfs_fofn} inputs.list #.list has changed to .args for gatk4, but will change back to .list soon 
+    mv ${input_vcfs_fofn} inputs.args
 
     # ignoreSafetyChecks make a big performance difference so we include it in our invocation
     ${gatk_path} --java-options "${java_opt}" \
     GatherVcfsCloud \
     --ignore-safety-checks \
     --gather-type BLOCK \
-    --input inputs.list \
+    --input inputs.args \
     --output ${output_vcf_name}
 
     ${gatk_path} --java-options "-Xmx6g -Xms6g" \
