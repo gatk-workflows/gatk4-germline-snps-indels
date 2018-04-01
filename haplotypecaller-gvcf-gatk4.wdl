@@ -44,8 +44,7 @@ workflow HaplotypeCallerGvcf_GATK4 {
 
   String sample_basename = basename(input_bam, ".bam")
   
-  String gvcf_name = sample_basename + ".g.vcf.gz"
-  String gvcf_index = sample_basename + ".g.vcf.gz.tbi"
+  String vcf_basename = sample_basename
 
   # Call variants in parallel over grouped calling intervals
   scatter (interval_file in scattered_calling_intervals) {
@@ -56,11 +55,11 @@ workflow HaplotypeCallerGvcf_GATK4 {
         input_bam = input_bam,
         input_bam_index = input_bam_index,
         interval_list = interval_file,
-        gvcf_name = gvcf_name,
+        vcf_basename = vcf_basename,
         ref_dict = ref_dict,
         ref_fasta = ref_fasta,
         ref_fasta_index = ref_fasta_index,
-        docker_image = gatk_docker,
+        docker = gatk_docker,
         gatk_path = gatk_path
     }
   }
@@ -68,17 +67,17 @@ workflow HaplotypeCallerGvcf_GATK4 {
   # Merge per-interval GVCFs
   call MergeGVCFs {
     input:
-      input_vcfs = HaplotypeCaller.output_gvcf,
-      vcf_name = gvcf_name,
-      vcf_index = gvcf_index,
-      docker_image = gatk_docker,
+      input_vcfs = HaplotypeCaller.output_vcf,
+      input_vcfs_indexes = HaplotypeCaller.output_vcf_index,
+      output_vcf_name = vcf_basename + ".g.vcf.gz",
+      docker = gatk_docker,
       gatk_path = gatk_path
   }
 
   # Outputs that will be retained when execution is complete
   output {
-    File output_merged_gvcf = MergeGVCFs.output_vcf
-    File output_merged_gvcf_index = MergeGVCFs.output_vcf_index
+    File output_vcf = MergeGVCFs.output_vcf
+    File output_vcf_index = MergeGVCFs.output_vcf_index
   }
 }
 
@@ -88,77 +87,95 @@ workflow HaplotypeCallerGvcf_GATK4 {
 task HaplotypeCaller {
   File input_bam
   File input_bam_index
-  String gvcf_name
+  File interval_list
+  String vcf_basename
   File ref_dict
   File ref_fasta
   File ref_fasta_index
-  File interval_list
-  Int? interval_padding
   Float? contamination
-  Int? max_alt_alleles
+  Boolean make_gvcf
 
-  Int preemptible_tries
-  Int disk_size
-  String mem_size
-
-  String docker_image
   String gatk_path
-  String java_opt
+  String? java_options
+  String java_opt = select_first([java_options, "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10"])
 
-  command {
-    ${gatk_path} --java-options ${java_opt} \
+  # Runtime parameters
+  String docker
+  Int? mem_gb
+  Int? disk_space_gb
+  Boolean use_ssd = false
+  Int? cpu
+  Int? preemptible_attempts
+
+  Int machine_mem_gb = select_first([mem_gb, 7])
+  Int command_mem_gb = machine_mem_gb - 1
+
+  command <<<
+  set -e
+  
+    ${gatk_path} --java-options "-Xmx${command_mem_gb}G ${java_opt}" \
       HaplotypeCaller \
       -R ${ref_fasta} \
       -I ${input_bam} \
-      -O ${gvcf_name} \
       -L ${interval_list} \
-      -ip ${default=100 interval_padding} \
-      -contamination ${default=0 contamination} \
-      --max-alternate-alleles ${default=3 max_alt_alleles} \
-      -ERC GVCF
-  }
+      -O ${vcf_basename}.vcf.gz \
+      -contamination ${default=0 contamination} ${true="-ERC GVCF" false="" make_gvcf}
+  >>>
 
   runtime {
-    docker: docker_image
-    memory: mem_size 
-    disks: "local-disk " + disk_size + " HDD"
+    docker: docker
+    memory: machine_mem_gb + " GB"
+    disks: "local-disk " + select_first([disk_space_gb, 100]) + if use_ssd then " SSD" else " HDD"
+    cpu: select_first([cpu, 1])
+    preemptible: select_first([preemptible_attempts, 3])
   }
 
   output {
-    File output_gvcf = "${gvcf_name}"
+    File output_vcf = "${vcf_basename}.vcf.gz"
+    File output_vcf_index = "${vcf_basename}.vcf.gz.tbi"
   }
 }
 
 # Merge GVCFs generated per-interval for the same sample
 task MergeGVCFs {
-  Array [File] input_vcfs
-  String vcf_name
-  String vcf_index
+  Array[File] input_vcfs
+  Array[File] input_vcfs_indexes
+  String output_vcf_name
 
-  Int preemptible_tries
-  Int disk_size
-  String mem_size
-
-  String docker_image
   String gatk_path
-  String java_opt
 
-  command {
-    ${gatk_path} --java-options ${java_opt} \
+  # Runtime parameters
+  String docker
+  Int? mem_gb
+  Int? disk_space_gb
+  Boolean use_ssd = false
+  Int? cpu
+  Int? preemptible_attempts
+
+  Int machine_mem_gb = select_first([mem_gb, 3])
+  Int command_mem_gb = machine_mem_gb - 1
+
+  command <<<
+  set -e
+
+    ${gatk_path} --java-options "-Xmx${command_mem_gb}G"  \
       MergeVcfs \
-      --INPUT=${sep=' --INPUT=' input_vcfs} \
-      --OUTPUT=${vcf_name}
-  }
+      --INPUT ${sep=' --INPUT ' input_vcfs} \
+      --OUTPUT ${output_vcf_name}
+  >>>
 
   runtime {
-    docker: docker_image
-    memory: mem_size
-    disks: "local-disk " + disk_size + " HDD"
-}
+    docker: docker
+    memory: machine_mem_gb + " GB"
+    disks: "local-disk " + select_first([disk_space_gb, 100]) + if use_ssd then " SSD" else " HDD"
+    cpu: select_first([cpu, 1])
+    preemptible: select_first([preemptible_attempts, 3])
+  }
+
 
   output {
-    File output_vcf = "${vcf_name}"
-    File output_vcf_index = "${vcf_index}"
+    File output_vcf = "${output_vcf_name}"
+    File output_vcf_index = "${output_vcf_name}.tbi"
   }
 }
 
