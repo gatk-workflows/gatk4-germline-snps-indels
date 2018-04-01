@@ -720,8 +720,8 @@ task ApplyRecalibration {
   File indels_recalibration
   File indels_recalibration_index
   File indels_tranches
-  File? snps_recalibration
-  File? snps_recalibration_index
+  File snps_recalibration
+  File snps_recalibration_index
   File snps_tranches
 
   Float indel_filter_level

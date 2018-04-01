@@ -115,7 +115,9 @@ workflow JointGenotyping {
         interval = unpadded_intervals[idx],
         workspace_dir_name = "genomicsdb",
         disk_size = medium_disk,
-        batch_size = 50
+        batch_size = 50,
+        docker = gatk_docker,
+        gatk_path = gatk_path
     }
 
     call GenotypeGVCFs {
@@ -373,6 +375,8 @@ task ImportGVCFs {
 
   String workspace_dir_name
 
+  String gatk_path
+  String docker
   Int disk_size
   Int batch_size
 
@@ -386,7 +390,7 @@ task ImportGVCFs {
     # a significant amount of non-heap memory for native libraries.
     # Also, testing has shown that the multithreaded reader initialization
     # does not scale well beyond 5 threads, so don't increase beyond that.
-    /gatk/gatk --java-options "-Xmx4g -Xms4g" \
+    ${gatk_path} --java-options "-Xmx4g -Xms4g" \
     GenomicsDBImport \
     --genomicsdb-workspace-path ${workspace_dir_name} \
     --batch-size ${batch_size} \
@@ -399,11 +403,11 @@ task ImportGVCFs {
 
   >>>
   runtime {
+    docker: docker
     memory: "7 GB"
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
     preemptible: 5
-    docker: "broadinstitute/gatk:4.0.1.1"
   }
   output {
     File output_genomicsdb = "${workspace_dir_name}.tar"
@@ -689,17 +693,17 @@ task GatherTranches {
 
     cat ${input_fofn} | rev | cut -d '/' -f 1 | rev | awk '{print "tranches/" $1}' > inputs.list
 
-      /gatk/gatk --java-options "-Xmx6g -Xms6g" \
+      ${gatk_path} --java-options "-Xmx6g -Xms6g" \
       GatherTranches \
       --input inputs.list \
       --output ${output_filename}
   >>>
   runtime {
+    docker: docker
     memory: "7 GB"
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
     preemptible: 5
-    docker: "broadinstitute/gatk:4.0.1.1"
   }
   output {
     File tranches = "${output_filename}"
@@ -713,8 +717,8 @@ task ApplyRecalibration {
   File indels_recalibration
   File indels_recalibration_index
   File indels_tranches
-  File? snps_recalibration
-  File? snps_recalibration_index
+  File snps_recalibration
+  File snps_recalibration_index
   File snps_tranches
 
   Float indel_filter_level
