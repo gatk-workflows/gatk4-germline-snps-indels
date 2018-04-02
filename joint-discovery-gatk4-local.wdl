@@ -119,7 +119,7 @@ workflow JointGenotyping {
         input_gvcfs = input_gvcfs,
         input_gvcfs_indices = input_gvcfs_indices,
         disk_size = medium_disk,
-        docker_image = gatk_docker,
+        docker = gatk_docker,
         gatk_path = gatk_path,
         batch_size = 50
     }
@@ -235,6 +235,7 @@ workflow JointGenotyping {
           disk_size = small_disk,
           docker = gatk_docker,
           gatk_path = gatk_path
+    }
   }
 
   if (num_gvcfs <= 10000){
@@ -422,7 +423,7 @@ task ImportGVCFs {
 
   >>>
   runtime {
-    docker: docker_image
+    docker: docker
     memory: "7 GB"
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
@@ -447,7 +448,7 @@ task GenotypeGVCFs {
   File dbsnp_vcf_index
 
   String gatk_path
-  String docker_image
+  String docker
   Int disk_size
 
   command <<<
