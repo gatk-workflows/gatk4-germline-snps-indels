@@ -1,4 +1,4 @@
-## Copyright Broad Institute, 2017
+## Copyright Broad Institute, 2018
 ## 
 ## This WDL implements the joint discovery and VQSR filtering portion of the GATK 
 ## Best Practices (June 2016) for germline SNP and Indel discovery in human 
