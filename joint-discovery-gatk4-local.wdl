@@ -776,7 +776,6 @@ task GatherVcfs {
   String gatk_path
   String docker
   Int disk_size
-  Int preemptible
 
   command <<<
     set -e
