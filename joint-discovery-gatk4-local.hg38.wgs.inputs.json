@@ -1,7 +1,9 @@
 {  
   "##_COMMENT1": "INPUT GVCFs & COHORT -- DATASET-SPECIFC, MUST BE ADAPTED",
+  "JointGenotyping.sample_names": ["NA12878"],
+  "JointGenotyping.input_gvcfs": ["/home/bshifaw/data/joint_discovery/NA12878.g.vcf.gz"],
+  "JointGenotyping.input_gvcfs_indices": ["/home/bshifaw/data/joint_discovery/NA12878.g.vcf.gz.tbi"],
   "JointGenotyping.callset_name": "NA12878",
-  "JointGenotyping.sample_name_map": "gs://gatk-test-data/joint_discovery/NA12878.sample_map",
 
   "##_COMMENT2": "REFERENCE FILES",
   "JointGenotyping.ref_fasta": "/home/bshifaw/broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
@@ -42,64 +44,10 @@
   "##_COMMENT5": "PATHS", 
   "JointGenotyping.gatk_path": "/gatk/gatk",
 
-  "##_COMMENT6": "JAVA OPTIONS", 
-  "JointGenotyping.SNPsVariantRecalibratorScattered.java_opt": "-Xmx3g -Xms3g",
-  "JointGenotyping.CollectMetricsOnFullVcf.java_opt": "-Xmx6g -Xms6g",
-  "JointGenotyping.IndelsVariantRecalibrator.java_opt": "-Xmx24g -Xms24g",
-  "JointGenotyping.HardFilterAndMakeSitesOnlyVcf.java_opt": "-Xmx3g -Xms3g",
-  "JointGenotyping.SNPGatherTranches.java_opt": "-Xmx6g -Xms6g",
-  "JointGenotyping.CollectMetricsSharded.java_opt": "-Xmx6g -Xms6g",
-  "JointGenotyping.SitesOnlyGatherVcf.java_opt": "-Xmx6g -Xms6g",
-  "JointGenotyping.ApplyRecalibration.java_opt": "-Xmx5g -Xms5g",
-  "JointGenotyping.FinalGatherVcf.java_opt": "-Xmx6g -Xms6g",
-  "JointGenotyping.ImportGVCFs.java_opt": "-Xmx4g -Xms4g",
-  "JointGenotyping.SNPsVariantRecalibratorCreateModel.java_opt": "-Xmx100g -Xms100g",
-  "JointGenotyping.GatherMetrics.java_opt": "-Xmx2g -Xms2g",
-  "JointGenotyping.GenotypeGVCFs.java_opt": "-Xmx5g -Xms5g",
-
-  "##_COMMENT7": "MEMORY ALLOCATION", 
-  "JointGenotyping.CollectMetricsSharded.mem_size": "7 GB",
-  "JointGenotyping.ImportGVCFs.mem_size": "7 GB",
-  "JointGenotyping.IndelsVariantRecalibrator.mem_size": "26 GB",
-  "JointGenotyping.ApplyRecalibration.mem_size": "7 GB",
-  "JointGenotyping.CollectMetricsOnFullVcf.mem_size": "7 GB",
-  "JointGenotyping.GenotypeGVCFs.mem_size": "7 GB",
-  "JointGenotyping.FinalGatherVcf.mem_size": "7 GB",
-  "JointGenotyping.SitesOnlyGatherVcf.mem_size": "7 GB",
-  "JointGenotyping.SNPsVariantRecalibratorScattered.mem_size": "3.5 GB",
-  "JointGenotyping.SNPsVariantRecalibratorCreateModel.mem_size": "104 GB",
-  "JointGenotyping.DynamicallyCombineIntervals.mem_size": "3 GB",
-  "JointGenotyping.GatherMetrics.mem_size": "3 GB",
-  "JointGenotyping.HardFilterAndMakeSitesOnlyVcf.mem_size": "3.5 GB",
-  "JointGenotyping.SNPGatherTranches.mem_size": "7 GB",
-
   "##_COMMENT8": "DISK SIZE ALLOCATION",
   "JointGenotyping.small_disk": 100,
   "JointGenotyping.medium_disk": 200,
   "JointGenotyping.large_disk": "300",
-  "JointGenotyping.huge_disk": 400,
-
-  "##_COMMENT9": "PREEMPTIBLES",
-  "JointGenotyping.FinalGatherVcf.preemptibles": 5,
-  "JointGenotyping.IndelsVariantRecalibrator.preemptibles": 5,
-  "JointGenotyping.SNPsVariantRecalibratorScattered.preemptibles": 5,
-  "JointGenotyping.HardFilterAndMakeSitesOnlyVcf.preemptibles": 5,
-  "JointGenotyping.CollectMetricsOnFullVcf.preemptibles": 5,
-  "JointGenotyping.GatherMetrics.preemptibles": 5,
-  "JointGenotyping.SNPGatherTranches.preemptibles": 5,
-  "JointGenotyping.SitesOnlyGatherVcf.preemptibles": 5,
-  "JointGenotyping.CollectMetricsSharded.preemptibles": 5,
-  "JointGenotyping.ApplyRecalibration.preemptibles": 5,
-  "JointGenotyping.ImportGVCFs.preemptibles": 5,
-  "JointGenotyping.SNPsVariantRecalibratorCreateModel.preemptibles": 5,
-  "JointGenotyping.GenotypeGVCFs.preemptibles": 5,
-  "JointGenotyping.DynamicallyCombineIntervals.preemptibles": 5,
-
-
-
-  "JointGenotyping.preemptible": 3,
-  "JointGenotyping.input_gvcfs_indices": ["/home/bshifaw/data/joint_discovery/NA12878.g.vcf.gz.tbi"],
-  "JointGenotyping.sample_names": ["NA12878"],
-  "JointGenotyping.input_gvcfs": ["/home/bshifaw/data/joint_discovery/NA12878.g.vcf.gz"]
+  "JointGenotyping.huge_disk": 400
 }
 
