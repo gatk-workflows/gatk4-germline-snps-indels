@@ -30,10 +30,6 @@
   "##HaplotypeCallerGvcf_GATK4.MergeGVCFs.disk_space_gb": "(optional) Int?",
   "##HaplotypeCallerGvcf_GATK4.HaplotypeCaller.disk_space_gb": "(optional) Int?",
 
-  "##_COMMENT9": "CPU",
-  "##HaplotypeCallerGvcf_GATK4.MergeGVCFs.cpu": "(optional) Int?",
-  "##HaplotypeCallerGvcf_GATK4.HaplotypeCaller.cpu": "(optional) Int?",
-
   "##_COMMENT9": "PREEMPTION",
   "##HaplotypeCallerGvcf_GATK4.HaplotypeCaller.preemptible_attempts": "(optional) Int?",
   "##HaplotypeCallerGvcf_GATK4.MergeGVCFs.preemptible_attempts": "(optional) Int?"

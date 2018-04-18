@@ -95,6 +95,9 @@ task HaplotypeCaller {
   Float? contamination
   Boolean make_gvcf
 
+  String output_suffix = if make_gvcf then ".g.vcf.gz" else ".vcf.gz"
+  String output_filename = vcf_basename + output_suffix
+
   String gatk_path
   String? java_options
   String java_opt = select_first([java_options, "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10"])
@@ -104,7 +107,6 @@ task HaplotypeCaller {
   Int? mem_gb
   Int? disk_space_gb
   Boolean use_ssd = false
-  Int? cpu
   Int? preemptible_attempts
 
   Int machine_mem_gb = select_first([mem_gb, 7])
@@ -118,7 +120,7 @@ task HaplotypeCaller {
       -R ${ref_fasta} \
       -I ${input_bam} \
       -L ${interval_list} \
-      -O ${vcf_basename}.vcf.gz \
+      -O ${output_filename} \
       -contamination ${default=0 contamination} ${true="-ERC GVCF" false="" make_gvcf}
   >>>
 
@@ -126,13 +128,12 @@ task HaplotypeCaller {
     docker: docker
     memory: machine_mem_gb + " GB"
     disks: "local-disk " + select_first([disk_space_gb, 100]) + if use_ssd then " SSD" else " HDD"
-    cpu: select_first([cpu, 1])
     preemptible: select_first([preemptible_attempts, 3])
   }
 
   output {
-    File output_vcf = "${vcf_basename}.vcf.gz"
-    File output_vcf_index = "${vcf_basename}.vcf.gz.tbi"
+    File output_vcf = "${output_filename}"
+    File output_vcf_index = "${output_filename}.tbi"
   }
 }
 
@@ -149,7 +150,6 @@ task MergeGVCFs {
   Int? mem_gb
   Int? disk_space_gb
   Boolean use_ssd = false
-  Int? cpu
   Int? preemptible_attempts
 
   Int machine_mem_gb = select_first([mem_gb, 3])
@@ -168,7 +168,6 @@ task MergeGVCFs {
     docker: docker
     memory: machine_mem_gb + " GB"
     disks: "local-disk " + select_first([disk_space_gb, 100]) + if use_ssd then " SSD" else " HDD"
-    cpu: select_first([cpu, 1])
     preemptible: select_first([preemptible_attempts, 3])
   }
 
