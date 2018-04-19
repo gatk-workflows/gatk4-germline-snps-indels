@@ -76,7 +76,8 @@
   "##_COMMENT8": "DISK SIZE ALLOCATION",
   "JointGenotyping.small_disk": 100,
   "JointGenotyping.medium_disk": 200,
-  "JointGenotyping.huge_disk": 300,
+  "JointGenotyping.large_disk": 300,
+  "JointGenotyping.huge_disk": 400,
 
   "##_COMMENT9": "PREEMPTIBLES",
   "JointGenotyping.FinalGatherVcf.preemptibles": 5,

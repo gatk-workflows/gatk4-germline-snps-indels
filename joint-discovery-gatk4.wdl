@@ -1,4 +1,4 @@
-## Copyright Broad Institute, 2017
+## Copyright Broad Institute, 2018
 ## 
 ## This WDL implements the joint discovery and VQSR filtering portion of the GATK 
 ## Best Practices (June 2016) for germline SNP and Indel discovery in human 
@@ -46,20 +46,20 @@ workflow JointGenotyping {
 
   String callset_name
   File sample_name_map
-  
+
   File ref_fasta
   File ref_fasta_index
   File ref_dict
 
   File dbsnp_vcf
   File dbsnp_vcf_index
-
+  
   String gatk_docker
   String gatk_path
-  String python_docker
 
   Int small_disk
   Int medium_disk
+  Int large_disk
   Int huge_disk
 
   Array[String] snp_recalibration_tranche_values
@@ -98,8 +98,7 @@ workflow JointGenotyping {
   call DynamicallyCombineIntervals {
     input:
       intervals = unpadded_intervals_file,
-      merge_count = merge_count,
-      docker_image = python_docker
+      merge_count = merge_count
   }
 
   Array[String] unpadded_intervals = read_lines(DynamicallyCombineIntervals.output_intervals)
@@ -115,9 +114,9 @@ workflow JointGenotyping {
         interval = unpadded_intervals[idx],
         workspace_dir_name = "genomicsdb",
         disk_size = medium_disk,
-        docker_image = gatk_docker,
-        gatk_path = gatk_path,
-        batch_size = 50
+        batch_size = 50,
+        docker = gatk_docker,
+        gatk_path = gatk_path
     }
 
     call GenotypeGVCFs {
@@ -130,7 +129,7 @@ workflow JointGenotyping {
         ref_dict = ref_dict,
         dbsnp_vcf = dbsnp_vcf,
         disk_size = medium_disk,
-        docker_image = gatk_docker,
+        docker = gatk_docker,
         gatk_path = gatk_path
     }
 
@@ -142,7 +141,7 @@ workflow JointGenotyping {
         variant_filtered_vcf_filename = callset_name + "." + idx + ".variant_filtered.vcf.gz",
         sites_only_vcf_filename = callset_name + "." + idx + ".sites_only.variant_filtered.vcf.gz",
         disk_size = medium_disk,
-        docker_image = gatk_docker,
+        docker = gatk_docker,
         gatk_path = gatk_path
     }
   }
@@ -152,30 +151,7 @@ workflow JointGenotyping {
       input_vcfs_fofn = write_lines(HardFilterAndMakeSitesOnlyVcf.sites_only_vcf),
       output_vcf_name = callset_name + ".sites_only.vcf.gz",
       disk_size = medium_disk,
-      docker_image = gatk_docker,
-      gatk_path = gatk_path
-  }
-
-  call SNPsVariantRecalibratorCreateModel {
-    input:
-      sites_only_variant_filtered_vcf = SitesOnlyGatherVcf.output_vcf,
-      sites_only_variant_filtered_vcf_index = SitesOnlyGatherVcf.output_vcf_index,
-      recalibration_filename = callset_name + ".snps.recal",
-      tranches_filename = callset_name + ".snps.tranches",
-      recalibration_tranche_values = snp_recalibration_tranche_values,
-      recalibration_annotation_values = snp_recalibration_annotation_values,
-      downsampleFactor = SNP_VQSR_downsampleFactor,
-      model_report_filename = callset_name + ".snps.model.report",
-      hapmap_resource_vcf = hapmap_resource_vcf,
-      hapmap_resource_vcf_index = hapmap_resource_vcf_index,
-      omni_resource_vcf = omni_resource_vcf,
-      omni_resource_vcf_index = omni_resource_vcf_index,
-      one_thousand_genomes_resource_vcf = one_thousand_genomes_resource_vcf,
-      one_thousand_genomes_resource_vcf_index = one_thousand_genomes_resource_vcf_index,
-      dbsnp_resource_vcf = dbsnp_resource_vcf,
-      dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
-      disk_size = small_disk,
-      docker_image = gatk_docker,
+      docker = gatk_docker,
       gatk_path = gatk_path
   }
 
@@ -194,12 +170,36 @@ workflow JointGenotyping {
       dbsnp_resource_vcf = dbsnp_resource_vcf,
       dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
       disk_size = small_disk,
-      docker_image = gatk_docker,
+      docker = gatk_docker,
       gatk_path = gatk_path
   }
 
+  if (num_gvcfs > 10000) {
+  call SNPsVariantRecalibratorCreateModel {
+      input:
+        sites_only_variant_filtered_vcf = SitesOnlyGatherVcf.output_vcf,
+        sites_only_variant_filtered_vcf_index = SitesOnlyGatherVcf.output_vcf_index,
+        recalibration_filename = callset_name + ".snps.recal",
+        tranches_filename = callset_name + ".snps.tranches",
+        recalibration_tranche_values = snp_recalibration_tranche_values,
+        recalibration_annotation_values = snp_recalibration_annotation_values,
+        downsampleFactor = SNP_VQSR_downsampleFactor,
+        model_report_filename = callset_name + ".snps.model.report",
+        hapmap_resource_vcf = hapmap_resource_vcf,
+        hapmap_resource_vcf_index = hapmap_resource_vcf_index,
+        omni_resource_vcf = omni_resource_vcf,
+        omni_resource_vcf_index = omni_resource_vcf_index,
+        one_thousand_genomes_resource_vcf = one_thousand_genomes_resource_vcf,
+        one_thousand_genomes_resource_vcf_index = one_thousand_genomes_resource_vcf_index,
+        dbsnp_resource_vcf = dbsnp_resource_vcf,
+        dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
+        disk_size = small_disk,
+        docker = gatk_docker,
+        gatk_path = gatk_path
+    }
+
   scatter (idx in range(length(HardFilterAndMakeSitesOnlyVcf.sites_only_vcf))) {
-    call SNPsVariantRecalibratorScattered {
+    call SNPsVariantRecalibrator as SNPsVariantRecalibratorScattered {
       input:
         sites_only_variant_filtered_vcf = HardFilterAndMakeSitesOnlyVcf.sites_only_vcf[idx],
         sites_only_variant_filtered_vcf_index = HardFilterAndMakeSitesOnlyVcf.sites_only_vcf_index[idx],
@@ -217,19 +217,42 @@ workflow JointGenotyping {
         dbsnp_resource_vcf = dbsnp_resource_vcf,
         dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
         disk_size = small_disk,
-        docker_image = gatk_docker,
+        docker = gatk_docker,
         gatk_path = gatk_path
+      }
+    }
+    call GatherTranches as SNPGatherTranches {
+        input:
+          input_fofn = write_lines(SNPsVariantRecalibratorScattered.tranches),
+          output_filename = callset_name + ".snps.gathered.tranches",
+          disk_size = small_disk,
+          docker = gatk_docker,
+          gatk_path = gatk_path 
       }
   }
 
-  call GatherTranches as SNPGatherTranches {
-    input:
-      input_fofn = write_lines(SNPsVariantRecalibratorScattered.tranches),
-      output_filename = callset_name + ".snps.gathered.tranches",
-      disk_size = small_disk,
-      docker_image = gatk_docker,
-      gatk_path = gatk_path
 
+  if (num_gvcfs <= 10000){
+    call SNPsVariantRecalibrator as SNPsVariantRecalibratorClassic {
+      input:
+          sites_only_variant_filtered_vcf = SitesOnlyGatherVcf.output_vcf,
+          sites_only_variant_filtered_vcf_index = SitesOnlyGatherVcf.output_vcf_index,
+          recalibration_filename = callset_name + ".snps.recal",
+          tranches_filename = callset_name + ".snps.tranches",
+          recalibration_tranche_values = snp_recalibration_tranche_values,
+          recalibration_annotation_values = snp_recalibration_annotation_values,
+          hapmap_resource_vcf = hapmap_resource_vcf,
+          hapmap_resource_vcf_index = hapmap_resource_vcf_index,
+          omni_resource_vcf = omni_resource_vcf,
+          omni_resource_vcf_index = omni_resource_vcf_index,
+          one_thousand_genomes_resource_vcf = one_thousand_genomes_resource_vcf,
+          one_thousand_genomes_resource_vcf_index = one_thousand_genomes_resource_vcf_index,
+          dbsnp_resource_vcf = dbsnp_resource_vcf,
+          dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
+          disk_size = small_disk,
+          docker = gatk_docker,
+          gatk_path = gatk_path
+    }
   }
 
   # For small callsets (fewer than 1000 samples) we can gather the VCF shards and collect metrics directly.
@@ -245,13 +268,13 @@ workflow JointGenotyping {
         indels_recalibration = IndelsVariantRecalibrator.recalibration,
         indels_recalibration_index = IndelsVariantRecalibrator.recalibration_index,
         indels_tranches = IndelsVariantRecalibrator.tranches,
-        snps_recalibration = SNPsVariantRecalibratorScattered.recalibration[idx],
-        snps_recalibration_index = SNPsVariantRecalibratorScattered.recalibration_index[idx],
-        snps_tranches = SNPGatherTranches.tranches,
+        snps_recalibration = if defined(SNPsVariantRecalibratorScattered.recalibration) then select_first([SNPsVariantRecalibratorScattered.recalibration])[idx] else select_first([SNPsVariantRecalibratorClassic.recalibration]),
+        snps_recalibration_index = if defined(SNPsVariantRecalibratorScattered.recalibration_index) then select_first([SNPsVariantRecalibratorScattered.recalibration_index])[idx] else select_first([SNPsVariantRecalibratorClassic.recalibration_index]),
+        snps_tranches = select_first([SNPGatherTranches.tranches, SNPsVariantRecalibratorClassic.tranches]),
         indel_filter_level = indel_filter_level,
         snp_filter_level = snp_filter_level,
         disk_size = medium_disk,
-        docker_image = gatk_docker,
+        docker = gatk_docker,
         gatk_path = gatk_path
     }
 
@@ -266,8 +289,8 @@ workflow JointGenotyping {
           dbsnp_vcf_index = dbsnp_vcf_index,
           interval_list = eval_interval_list,
           ref_dict = ref_dict,
-          disk_size = small_disk,
-          docker_image = gatk_docker,
+          disk_size = medium_disk,
+          docker = gatk_docker,
           gatk_path = gatk_path
       }
     }
@@ -280,7 +303,7 @@ workflow JointGenotyping {
         input_vcfs_fofn = write_lines(ApplyRecalibration.recalibrated_vcf),
         output_vcf_name = callset_name + ".vcf.gz",
         disk_size = huge_disk,
-        docker_image = gatk_docker,
+        docker = gatk_docker,
         gatk_path = gatk_path
     }
 
@@ -293,8 +316,8 @@ workflow JointGenotyping {
         dbsnp_vcf_index = dbsnp_vcf_index,
         interval_list = eval_interval_list,
         ref_dict = ref_dict,
-        disk_size = small_disk,
-        docker_image = gatk_docker,
+        disk_size = large_disk,
+        docker = gatk_docker,
         gatk_path = gatk_path
     }
   }
@@ -307,7 +330,7 @@ workflow JointGenotyping {
         input_summaries_fofn = write_lines(select_all(CollectMetricsSharded.summary_metrics_file)),
         output_prefix = callset_name,
         disk_size = medium_disk,
-        docker_image = gatk_docker,
+        docker = gatk_docker,
         gatk_path = gatk_path
     }
   }
@@ -331,16 +354,14 @@ workflow JointGenotyping {
 
 task GetNumberOfSamples {
   File sample_name_map
-  String mem_size
-  Int preemptibles
- 
+  String docker
   command <<<
     wc -l ${sample_name_map} | awk '{print $1}'
   >>>
   runtime {
-    docker: docker_image
-    memory: mem_size
-    preemptible: preemptibles
+    docker: docker
+    memory: "1 GB"
+    preemptible: 5
   }
   output {
     Int sample_count = read_int(stdout())
@@ -352,14 +373,10 @@ task ImportGVCFs {
   String interval
 
   String workspace_dir_name
-  
-  String java_opt
-  String gatk_path  
 
-  String docker_image
+  String gatk_path
+  String docker
   Int disk_size
-  String mem_size
-  Int preemptibles
   Int batch_size
 
   command <<<
@@ -372,7 +389,7 @@ task ImportGVCFs {
     # a significant amount of non-heap memory for native libraries.
     # Also, testing has shown that the multithreaded reader initialization
     # does not scale well beyond 5 threads, so don't increase beyond that.
-    ${gatk_path} --java-options "${java_opt}" \
+    ${gatk_path} --java-options "-Xmx4g -Xms4g" \
     GenomicsDBImport \
     --genomicsdb-workspace-path ${workspace_dir_name} \
     --batch-size ${batch_size} \
@@ -385,11 +402,11 @@ task ImportGVCFs {
 
   >>>
   runtime {
-    docker: docker_image
-    memory: mem_size
+    docker: docker
+    memory: "7 GB"
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: preemptibles
+    preemptible: 5
   }
   output {
     File output_genomicsdb = "${workspace_dir_name}.tar"
@@ -403,18 +420,14 @@ task GenotypeGVCFs {
   String output_vcf_filename
 
   String gatk_path
-  String java_opt
 
   File ref_fasta
   File ref_fasta_index
   File ref_dict
 
   String dbsnp_vcf
-
-  String docker_image
+  String docker
   Int disk_size
-  String mem_size
-  Int preemptibles
 
   command <<<
     set -e
@@ -422,23 +435,23 @@ task GenotypeGVCFs {
     tar -xf ${workspace_tar}
     WORKSPACE=$( basename ${workspace_tar} .tar)
 
-    ${gatk_path} --java-options "${java_opt}" \
+    ${gatk_path} --java-options "-Xmx5g -Xms5g" \
      GenotypeGVCFs \
      -R ${ref_fasta} \
      -O ${output_vcf_filename} \
      -D ${dbsnp_vcf} \
      -G StandardAnnotation \
      --only-output-calls-starting-in-intervals \
-     -new-qual \
+     --use-new-qual-calculator \
      -V gendb://$WORKSPACE \
      -L ${interval}
   >>>
   runtime {
-    docker: docker_image
-    memory: mem_size
+    docker: docker
+    memory: "7 GB"
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: preemptibles
+    preemptible: 5
   }
   output {
     File output_vcf = "${output_vcf_filename}"
@@ -453,37 +466,33 @@ task HardFilterAndMakeSitesOnlyVcf {
 
   String variant_filtered_vcf_filename
   String sites_only_vcf_filename
-  
   String gatk_path
-  String java_opt
 
-  String docker_image
+  String docker
   Int disk_size
-  String mem_size
-  Int preemptibles
 
   command {
     set -e
 
-    ${gatk_path} --java-options "${java_opt}" \
+    ${gatk_path} --java-options "-Xmx3g -Xms3g" \
       VariantFiltration \
       --filter-expression "ExcessHet > ${excess_het_threshold}" \
       --filter-name ExcessHet \
       -O ${variant_filtered_vcf_filename} \
       -V ${vcf}
 
-    ${gatk_path} --java-options "${java_opt}" \
+    ${gatk_path} --java-options "-Xmx3g -Xms3g" \
       MakeSitesOnlyVcf \
       --INPUT ${variant_filtered_vcf_filename} \
       --OUTPUT ${sites_only_vcf_filename}
 
   }
   runtime {
-    docker: docker_image
-    memory: mem_size
+    docker: docker
+    memory: "3.5 GB"
     cpu: "1"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: preemptibles
+    preemptible: 5
   }
   output {
     File variant_filtered_vcf = "${variant_filtered_vcf_filename}"
@@ -511,20 +520,16 @@ task IndelsVariantRecalibrator {
   File dbsnp_resource_vcf_index
 
   String gatk_path
-  String java_opt
-
-  String docker_image
+  String docker
   Int disk_size
-  String mem_size
-  Int preemptibles
 
   command {
-    ${gatk_path} --java-options "${java_opt}" \
+    ${gatk_path} --java-options "-Xmx24g -Xms24g" \
       VariantRecalibrator \
       -V ${sites_only_variant_filtered_vcf} \
       -O ${recalibration_filename} \
       --tranches-file ${tranches_filename} \
-      -trust-all-polymorphic \
+      --trust-all-polymorphic \
       -tranche ${sep=' -tranche ' recalibration_tranche_values} \
       -an ${sep=' -an ' recalibration_annotation_values} \
       -mode INDEL \
@@ -534,11 +539,11 @@ task IndelsVariantRecalibrator {
       -resource dbsnp,known=true,training=false,truth=false,prior=2:${dbsnp_resource_vcf}
   }
   runtime {
-    docker: docker_image
-    memory: mem_size
+    docker: docker
+    memory: "26 GB"
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: preemptibles
+    preemptible: 5
   }
   output {
     File recalibration = "${recalibration_filename}"
@@ -569,24 +574,20 @@ task SNPsVariantRecalibratorCreateModel {
   File dbsnp_resource_vcf_index
 
   String gatk_path
-  String java_opt
-
-  String docker_image
+  String docker
   Int disk_size
-  String mem_size
-  Int preemptibles
 
   command {
-    ${gatk_path} --java-options "${java_opt}" \
+    ${gatk_path} --java-options "-Xmx100g -Xms100g" \
       VariantRecalibrator \
       -V ${sites_only_variant_filtered_vcf} \
       -O ${recalibration_filename} \
       --tranches-file ${tranches_filename} \
-      -trust-all-polymorphic \
+      --trust-all-polymorphic \
       -tranche ${sep=' -tranche ' recalibration_tranche_values} \
       -an ${sep=' -an ' recalibration_annotation_values} \
       -mode SNP \
-      -sample-every ${downsampleFactor} \
+      --sample-every-Nth-variant ${downsampleFactor} \
       --output-model ${model_report_filename} \
       --max-gaussians 6 \
       -resource hapmap,known=false,training=true,truth=true,prior=15:${hapmap_resource_vcf} \
@@ -595,21 +596,21 @@ task SNPsVariantRecalibratorCreateModel {
       -resource dbsnp,known=true,training=false,truth=false,prior=7:${dbsnp_resource_vcf}
   }
   runtime {
-    docker: docker_image
-    memory: mem_size
+    docker: docker
+    memory: "104 GB"
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: preemptibles
+    preemptible: 5
   }
   output {
     File model_report = "${model_report_filename}"
   }
 }
 
-task SNPsVariantRecalibratorScattered {
+task SNPsVariantRecalibrator {
   String recalibration_filename
   String tranches_filename
-  File model_report
+  File? model_report
 
   Array[String] recalibration_tranche_values
   Array[String] recalibration_annotation_values
@@ -625,27 +626,22 @@ task SNPsVariantRecalibratorScattered {
   File omni_resource_vcf_index
   File one_thousand_genomes_resource_vcf_index
   File dbsnp_resource_vcf_index
-  
-  String gatk_path
-  String java_opt
 
-  String docker_image
+  String gatk_path
+  String docker
   Int disk_size
-  String mem_size
-  Int preemptibles
 
   command {
-    ${gatk_path} --java-options "${java_opt}" \
+    ${gatk_path} --java-options "-Xmx3g -Xms3g" \
       VariantRecalibrator \
       -V ${sites_only_variant_filtered_vcf} \
       -O ${recalibration_filename} \
       --tranches-file ${tranches_filename} \
-      -trust-all-polymorphic \
+      --trust-all-polymorphic \
       -tranche ${sep=' -tranche ' recalibration_tranche_values} \
       -an ${sep=' -an ' recalibration_annotation_values} \
       -mode SNP \
-      --input-model ${model_report} \
-      -output-tranches-for-scatter \
+      ${"--input-model " + model_report + " --output-tranches-for-scatter "} \
       --max-gaussians 6 \
       -resource hapmap,known=false,training=true,truth=true,prior=15:${hapmap_resource_vcf} \
       -resource omni,known=false,training=true,truth=true,prior=12:${omni_resource_vcf} \
@@ -653,11 +649,11 @@ task SNPsVariantRecalibratorScattered {
       -resource dbsnp,known=true,training=false,truth=false,prior=7:${dbsnp_resource_vcf}
   }
   runtime {
-    docker: docker_image
-    memory: mem_size
+    docker: docker
+    memory: "3.5 GB"
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: preemptibles
+    preemptible: 5
   }
   output {
     File recalibration = "${recalibration_filename}"
@@ -671,12 +667,9 @@ task GatherTranches {
   String output_filename
 
   String gatk_path
-  String java_opt
 
-  String docker_image
+  String docker
   Int disk_size
-  String mem_size
-  Int preemptibles
 
   command <<<
     set -e
@@ -689,7 +682,7 @@ task GatherTranches {
     RETRY_LIMIT=5
 
     count=0
-    until cat ${input_fofn} | /google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I tranches/; do
+    until cat ${input_fofn} | /root/google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I tranches/; do
         sleep 1
         ((count++)) && ((count >= $RETRY_LIMIT)) && break
     done
@@ -697,20 +690,19 @@ task GatherTranches {
         echo 'Could not copy all the tranches from the cloud' && exit 1
     fi
 
-    #cat ${input_fofn} | rev | cut -d '/' -f 1 | rev | awk '{print "tranches/" $1}' > inputs.list #.list has changed to .args for gatk4, but will change back to .list soon
-    cat ${input_fofn} | rev | cut -d '/' -f 1 | rev | awk '{print "tranches/" $1}' > inputs.args
+    cat ${input_fofn} | rev | cut -d '/' -f 1 | rev | awk '{print "tranches/" $1}' > inputs.list
 
-      ${gatk_path} --java-options "${java_opt}" \
+      ${gatk_path} --java-options "-Xmx6g -Xms6g" \
       GatherTranches \
-      --input inputs.args \
+      --input inputs.list \
       --output ${output_filename}
   >>>
   runtime {
-    docker: docker_image
-    memory: mem_size
+    docker: docker
+    memory: "7 GB"
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: preemptibles
+    preemptible: 5
   }
   output {
     File tranches = "${output_filename}"
@@ -732,42 +724,38 @@ task ApplyRecalibration {
   Float snp_filter_level
 
   String gatk_path
-  String java_opt
-
-  String docker_image
+  String docker
   Int disk_size
-  String mem_size
-  Int preemptibles
 
   command {
     set -e
 
-    ${gatk_path} --java-options "${java_opt}" \
+    ${gatk_path} --java-options "-Xmx5g -Xms5g" \
       ApplyVQSR \
       -O tmp.indel.recalibrated.vcf \
       -V ${input_vcf} \
       --recal-file ${indels_recalibration} \
-      -tranches-file ${indels_tranches} \
-      -truth-sensitivity-filter-level ${indel_filter_level} \
+      --tranches-file ${indels_tranches} \
+      --truth-sensitivity-filter-level ${indel_filter_level} \
       --create-output-variant-index true \
       -mode INDEL
-      
-    ${gatk_path} --java-options "${java_opt}" \
+
+    ${gatk_path} --java-options "-Xmx5g -Xms5g" \
       ApplyVQSR \
       -O ${recalibrated_vcf_filename} \
       -V tmp.indel.recalibrated.vcf \
       --recal-file ${snps_recalibration} \
-      -tranches-file ${snps_tranches} \
-      -truth-sensitivity-filter-level ${snp_filter_level} \
+      --tranches-file ${snps_tranches} \
+      --truth-sensitivity-filter-level ${snp_filter_level} \
       --create-output-variant-index true \
       -mode SNP
   }
   runtime {
-    docker: docker_image
-    memory: mem_size
+    docker: docker
+    memory: "7 GB"
     cpu: "1"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: preemptibles
+    preemptible: 5
   }
   output {
     File recalibrated_vcf = "${recalibrated_vcf_filename}"
@@ -778,28 +766,25 @@ task ApplyRecalibration {
 task GatherVcfs {
   File input_vcfs_fofn
   String output_vcf_name
-  
   String gatk_path
-  String java_opt
 
-  String docker_image
+  String docker
   Int disk_size
-  String mem_size
-  Int preemptibles
 
   command <<<
     set -e
 
     # Now using NIO to localize the vcfs but the input file must have a ".list" extension
-    #mv ${input_vcfs_fofn} inputs.list #.list has changed to .args for gatk4, but will change back to .list soon 
-    mv ${input_vcfs_fofn} inputs.args
+    mv ${input_vcfs_fofn} inputs.list
 
-    # ignoreSafetyChecks make a big performance difference so we include it in our invocation
-    ${gatk_path} --java-options "${java_opt}" \
+    # --ignore-safety-checks makes a big performance difference so we include it in our invocation.
+    # This argument disables expensive checks that the file headers contain the same set of
+    # genotyped samples and that files are in order by position of first record.
+    ${gatk_path} --java-options "-Xmx6g -Xms6g" \
     GatherVcfsCloud \
     --ignore-safety-checks \
     --gather-type BLOCK \
-    --input inputs.args \
+    --input inputs.list \
     --output ${output_vcf_name}
 
     ${gatk_path} --java-options "-Xmx6g -Xms6g" \
@@ -807,11 +792,11 @@ task GatherVcfs {
     --feature-file ${output_vcf_name}
   >>>
   runtime {
-    docker: docker_image
-    memory: mem_size
+    docker: docker
+    memory: "7 GB"
     cpu: "1"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: preemptibles
+    preemptible: 5
   }
   output {
     File output_vcf = "${output_vcf_name}"
@@ -822,7 +807,7 @@ task GatherVcfs {
 task CollectVariantCallingMetrics {
   File input_vcf
   File input_vcf_index
-  
+
   String metrics_filename_prefix
   File dbsnp_vcf
   File dbsnp_vcf_index
@@ -830,15 +815,11 @@ task CollectVariantCallingMetrics {
   File ref_dict
 
   String gatk_path
-  String java_opt
-
-  String docker_image
+  String docker
   Int disk_size
-  String mem_size
-  Int preemptibles
 
   command {
-    ${gatk_path} --java-options "${java_opt}" \
+    ${gatk_path} --java-options "-Xmx6g -Xms6g" \
       CollectVariantCallingMetrics \
       --INPUT ${input_vcf} \
       --DBSNP ${dbsnp_vcf} \
@@ -852,11 +833,11 @@ task CollectVariantCallingMetrics {
     File summary_metrics_file = "${metrics_filename_prefix}.variant_calling_summary_metrics"
   }
   runtime {
-    docker: docker_image
-    memory: mem_size
+    docker: docker
+    memory: "7 GB"
     cpu: 2
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: preemptibles
+    preemptible: 5
   }
 }
 
@@ -867,12 +848,8 @@ task GatherMetrics {
   String output_prefix
 
   String gatk_path
-  String java_opt
-
-  String docker_image
+  String docker
   Int disk_size
-  String mem_size
-  Int preemptibles
 
   command <<<
     set -e
@@ -885,7 +862,7 @@ task GatherMetrics {
     RETRY_LIMIT=5
 
     count=0
-    until cat ${input_details_fofn} | /google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I metrics/; do
+    until cat ${input_details_fofn} | /root/google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I metrics/; do
         sleep 1
         ((count++)) && ((count >= $RETRY_LIMIT)) && break
     done
@@ -894,7 +871,7 @@ task GatherMetrics {
     fi
 
     count=0
-    until cat ${input_summaries_fofn} | /google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I metrics/; do
+    until cat ${input_summaries_fofn} | /root/google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I metrics/; do
         sleep 1
         ((count++)) && ((count >= $RETRY_LIMIT)) && break
     done
@@ -904,17 +881,17 @@ task GatherMetrics {
 
     INPUT=`cat ${input_details_fofn} | rev | cut -d '/' -f 1 | rev | sed s/.variant_calling_detail_metrics//g | awk '{printf("I=metrics/%s ", $1)}'`
 
-    ${gatk_path} --java-option "${java_opt}" \
+    ${gatk_path} --java-option "-Xmx2g -Xms2g" \
     AccumulateVariantCallingMetrics \
-    --INPUT $INPUT \
-    --OUTPUT ${output_prefix}
+    --$INPUT \
+    --O ${output_prefix}
   >>>
   runtime {
-    docker: docker_image
-    memory: mem_size
+    docker: docker
+    memory: "3 GB"
     cpu: "1"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: preemptibles
+    preemptible: 5
   }
   output {
     File detail_metrics_file = "${output_prefix}.variant_calling_detail_metrics"
@@ -925,9 +902,6 @@ task GatherMetrics {
 task DynamicallyCombineIntervals {
   File intervals
   Int merge_count
-  String docker_image
-  String mem_size
-  Int preemptibles
 
   command {
     python << CODE
@@ -980,9 +954,9 @@ task DynamicallyCombineIntervals {
   }
 
   runtime {
-    memory: mem_size
-    preemptible: preemptibles
-    docker: docker_image
+    memory: "3 GB"
+    preemptible: 5
+    docker: "python:2.7"
   }
 
   output {

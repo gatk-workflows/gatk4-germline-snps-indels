@@ -19,7 +19,7 @@ The second WDL implements the joint discovery and VQSR
 filtering portion of the GATK Best Practices (June 2016) for germline SNP and Indel 
 discovery in human whole-genome sequencing (WGS) and exome sequencing data.
 
-*NOTE: joint-discovery-gatk4-fc.wdl is a slightly modified version of the original to support users interested in running the workflow on [FireCloud](https://software.broadinstitute.org/firecloud/).*
+*NOTE: joint-discovery-gatk4-local.wdl is a slightly modified version of the original to support users interested in running the workflow locally.*
 
 #### Requirements/expectations
 - One or more GVCFs produced by HaplotypeCaller in GVCF mode
@@ -28,20 +28,20 @@ discovery in human whole-genome sequencing (WGS) and exome sequencing data.
   - small_disk = (num_gvcfs / 10) + 10
   - medium_disk = (num_gvcfs * 15) + 10
   - huge_disk = num_gvcfs + 10
-#### Outputs 
+
+### Outputs 
 - A VCF file and its index, filtered using variant quality score recalibration  
   (VQSR) with genotypes for all samples present in the input VCF. All sites that  
   are present in the input VCF are retained; filtered sites are annotated as such  
   in the FILTER field.
 
 ### Software version requirements :
-- GATK 4.beta.3 or later 
-- Picard 2.x
+- GATK 4 or later 
 - Samtools (see gotc docker)
 - Python 2.7
 
 Cromwell version support 
-- Successfully tested on v29
+- Successfully tested on v31
 - Does not work on versions < v23 due to output syntax
 
 ### IMPORTANT NOTE : 
