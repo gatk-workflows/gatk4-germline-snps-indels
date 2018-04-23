@@ -36,7 +36,8 @@ workflow HaplotypeCallerGvcf_GATK4 {
   File ref_fasta_index
   File scattered_calling_intervals_list
   
-  Boolean make_gvcf
+  Boolean? make_gvcf
+  Boolean making_gvcf = select_first([make_gvcf,"true"])
 
   String gatk_docker
 
@@ -47,7 +48,7 @@ workflow HaplotypeCallerGvcf_GATK4 {
   String sample_basename = basename(input_bam, ".bam")
   
   String vcf_basename = sample_basename
-  String output_suffix = if make_gvcf then ".g.vcf.gz" else ".vcf.gz"
+  String output_suffix = if making_gvcf then ".g.vcf.gz" else ".vcf.gz"
   String output_filename = vcf_basename + output_suffix
 
   # Call variants in parallel over grouped calling intervals
@@ -63,7 +64,7 @@ workflow HaplotypeCallerGvcf_GATK4 {
         ref_dict = ref_dict,
         ref_fasta = ref_fasta,
         ref_fasta_index = ref_fasta_index,
-        make_gvcf = make_gvcf,
+        make_gvcf = making_gvcf,
         docker = gatk_docker,
         gatk_path = gatk_path
     }
