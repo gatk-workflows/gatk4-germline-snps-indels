@@ -48,8 +48,10 @@ workflow HaplotypeCallerGvcf_GATK4 {
   String sample_basename = basename(input_bam, ".bam")
   
   String vcf_basename = sample_basename
+
   String output_suffix = if making_gvcf then ".g.vcf.gz" else ".vcf.gz"
   String output_filename = vcf_basename + output_suffix
+
 
   # Call variants in parallel over grouped calling intervals
   scatter (interval_file in scattered_calling_intervals) {
@@ -94,6 +96,7 @@ task HaplotypeCaller {
   File input_bam
   File input_bam_index
   File interval_list
+
   String output_filename
   File ref_dict
   File ref_fasta
@@ -180,4 +183,3 @@ task MergeGVCFs {
     File output_vcf_index = "${output_filename}.tbi"
   }
 }
-
