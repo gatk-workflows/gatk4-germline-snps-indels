@@ -37,7 +37,7 @@ workflow HaplotypeCallerGvcf_GATK4 {
   File scattered_calling_intervals_list
   
   Boolean? make_gvcf
-  Boolean making_gvcf = select_first([make_gvcf,"true"])
+  Boolean making_gvcf = select_first([make_gvcf,true])
 
   String gatk_docker
 
