@@ -11,7 +11,7 @@
 ## - One GVCF file and its index
 ##
 ## Cromwell version support 
-## - Successfully tested on v29
+## - Successfully tested on v31
 ## - Does not work on versions < v23 due to output syntax
 ##
 ## IMPORTANT NOTE: HaplotypeCaller in GATK4 is still in evaluation phase and should not
@@ -35,6 +35,9 @@ workflow HaplotypeCallerGvcf_GATK4 {
   File ref_fasta
   File ref_fasta_index
   File scattered_calling_intervals_list
+  
+  Boolean? make_gvcf
+  Boolean making_gvcf = select_first([make_gvcf,"true"])
 
   String gatk_docker
 
@@ -46,6 +49,10 @@ workflow HaplotypeCallerGvcf_GATK4 {
   
   String vcf_basename = sample_basename
 
+  String output_suffix = if making_gvcf then ".g.vcf.gz" else ".vcf.gz"
+  String output_filename = vcf_basename + output_suffix
+
+
   # Call variants in parallel over grouped calling intervals
   scatter (interval_file in scattered_calling_intervals) {
 
@@ -55,10 +62,11 @@ workflow HaplotypeCallerGvcf_GATK4 {
         input_bam = input_bam,
         input_bam_index = input_bam_index,
         interval_list = interval_file,
-        vcf_basename = vcf_basename,
+        output_filename = output_filename,
         ref_dict = ref_dict,
         ref_fasta = ref_fasta,
         ref_fasta_index = ref_fasta_index,
+        make_gvcf = making_gvcf,
         docker = gatk_docker,
         gatk_path = gatk_path
     }
@@ -69,7 +77,7 @@ workflow HaplotypeCallerGvcf_GATK4 {
     input:
       input_vcfs = HaplotypeCaller.output_vcf,
       input_vcfs_indexes = HaplotypeCaller.output_vcf_index,
-      output_vcf_name = vcf_basename + ".g.vcf.gz",
+      output_filename = output_filename,
       docker = gatk_docker,
       gatk_path = gatk_path
   }
@@ -88,15 +96,13 @@ task HaplotypeCaller {
   File input_bam
   File input_bam_index
   File interval_list
-  String vcf_basename
+
+  String output_filename
   File ref_dict
   File ref_fasta
   File ref_fasta_index
   Float? contamination
   Boolean make_gvcf
-
-  String output_suffix = if make_gvcf then ".g.vcf.gz" else ".vcf.gz"
-  String output_filename = vcf_basename + output_suffix
 
   String gatk_path
   String? java_options
@@ -141,7 +147,7 @@ task HaplotypeCaller {
 task MergeGVCFs {
   Array[File] input_vcfs
   Array[File] input_vcfs_indexes
-  String output_vcf_name
+  String output_filename
 
   String gatk_path
 
@@ -161,7 +167,7 @@ task MergeGVCFs {
     ${gatk_path} --java-options "-Xmx${command_mem_gb}G"  \
       MergeVcfs \
       --INPUT ${sep=' --INPUT ' input_vcfs} \
-      --OUTPUT ${output_vcf_name}
+      --OUTPUT ${output_filename}
   >>>
 
   runtime {
@@ -173,8 +179,7 @@ task MergeGVCFs {
 
 
   output {
-    File output_vcf = "${output_vcf_name}"
-    File output_vcf_index = "${output_vcf_name}.tbi"
+    File output_vcf = "${output_filename}"
+    File output_vcf_index = "${output_filename}.tbi"
   }
 }
-
