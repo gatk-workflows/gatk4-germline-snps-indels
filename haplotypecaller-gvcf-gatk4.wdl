@@ -14,10 +14,6 @@
 ## - Successfully tested on v31
 ## - Does not work on versions < v23 due to output syntax
 ##
-## IMPORTANT NOTE: HaplotypeCaller in GATK4 is still in evaluation phase and should not
-## be used in production until it has been fully vetted. In the meantime, use the GATK3 
-## version for any production needs.
-##
 ## Runtime parameters are optimized for Broad's Google Cloud Platform implementation.
 ##
 ## LICENSING : 
