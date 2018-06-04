@@ -12,7 +12,7 @@
   "HaplotypeCallerGvcf_GATK4.scattered_calling_intervals_list": "gs://gatk-test-data/intervals/hg38_wgs_scattered_calling_intervals.txt",
 
   "##_COMMENT4": "DOCKERS", 
-  "HaplotypeCallerGvcf_GATK4.gatk_docker": "broadinstitute/gatk:4.0.1.0",
+  "HaplotypeCallerGvcf_GATK4.gatk_docker": "broadinstitute/gatk:4.0.4.0",
   
   "##_COMMENT5": "PATHS", 
   "HaplotypeCallerGvcf_GATK4.gatk_path": "/gatk/gatk",

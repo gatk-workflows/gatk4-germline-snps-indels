@@ -27,7 +27,7 @@
 ## execution. Wiring the INDEL recalibration to be applied first solves the problem.
 ##
 ## Cromwell version support 
-## - Successfully tested on v29
+## - Successfully tested on v31
 ## - Does not work on versions < v23 due to output syntax
 ##
 ## Runtime parameters are optimized for Broad's Google Cloud Platform implementation. 

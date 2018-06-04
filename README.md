@@ -46,9 +46,6 @@ Cromwell version support
 
 ### IMPORTANT NOTE : 
 - Runtime parameters are optimized for Broad's Google Cloud Platform implementation.
-- HaplotypeCaller in GATK4 is still in evaluation phase and should not
-  be used in production until it has been fully vetted. In the meantime, use the GATK3 
-  version for any production needs.
 - VQSR wiring. The SNP and INDEL models are built in parallel, but then the corresponding 
   recalibrations are applied in series. Because the INDEL model is generally ready 
   first (because there are fewer indels than SNPs) we set INDEL recalibration to 
