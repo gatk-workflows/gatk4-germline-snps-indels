@@ -682,7 +682,7 @@ task GatherTranches {
     RETRY_LIMIT=5
 
     count=0
-    until cat ${input_fofn} | /root/google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I tranches/; do
+    until cat ${input_fofn} | /google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I tranches/; do
         sleep 1
         ((count++)) && ((count >= $RETRY_LIMIT)) && break
     done
@@ -862,7 +862,7 @@ task GatherMetrics {
     RETRY_LIMIT=5
 
     count=0
-    until cat ${input_details_fofn} | /root/google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I metrics/; do
+    until cat ${input_details_fofn} | /google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I metrics/; do
         sleep 1
         ((count++)) && ((count >= $RETRY_LIMIT)) && break
     done
@@ -871,7 +871,7 @@ task GatherMetrics {
     fi
 
     count=0
-    until cat ${input_summaries_fofn} | /root/google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I metrics/; do
+    until cat ${input_summaries_fofn} | /google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I metrics/; do
         sleep 1
         ((count++)) && ((count >= $RETRY_LIMIT)) && break
     done
