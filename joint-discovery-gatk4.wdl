@@ -879,12 +879,12 @@ task GatherMetrics {
         echo 'Could not copy all the metrics from the cloud' && exit 1
     fi
 
-    INPUT=`cat ${input_details_fofn} | rev | cut -d '/' -f 1 | rev | sed s/.variant_calling_detail_metrics//g | awk '{printf("I=metrics/%s ", $1)}'`
+    INPUT=`cat ${input_details_fofn} | rev | cut -d '/' -f 1 | rev | sed s/.variant_calling_detail_metrics//g | awk '{printf("-I=metrics/%s ", $1)}'`
 
-    ${gatk_path} --java-option "-Xmx2g -Xms2g" \
+    ${gatk_path} --java-options "-Xmx2g -Xms2g" \
     AccumulateVariantCallingMetrics \
-    --$INPUT \
-    --O ${output_prefix}
+    $INPUT \
+    -O ${output_prefix}
   >>>
   runtime {
     docker: docker
