@@ -682,7 +682,7 @@ task GatherTranches {
     RETRY_LIMIT=5
 
     count=0
-    until cat ${input_fofn} | /root/google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I tranches/; do
+    until cat ${input_fofn} | /google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I tranches/; do
         sleep 1
         ((count++)) && ((count >= $RETRY_LIMIT)) && break
     done
@@ -862,7 +862,7 @@ task GatherMetrics {
     RETRY_LIMIT=5
 
     count=0
-    until cat ${input_details_fofn} | /root/google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I metrics/; do
+    until cat ${input_details_fofn} | /google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I metrics/; do
         sleep 1
         ((count++)) && ((count >= $RETRY_LIMIT)) && break
     done
@@ -871,7 +871,7 @@ task GatherMetrics {
     fi
 
     count=0
-    until cat ${input_summaries_fofn} | /root/google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I metrics/; do
+    until cat ${input_summaries_fofn} | /google-cloud-sdk/bin/gsutil -m cp -L cp.log -c -I metrics/; do
         sleep 1
         ((count++)) && ((count >= $RETRY_LIMIT)) && break
     done
@@ -879,12 +879,12 @@ task GatherMetrics {
         echo 'Could not copy all the metrics from the cloud' && exit 1
     fi
 
-    INPUT=`cat ${input_details_fofn} | rev | cut -d '/' -f 1 | rev | sed s/.variant_calling_detail_metrics//g | awk '{printf("I=metrics/%s ", $1)}'`
+    INPUT=`cat ${input_details_fofn} | rev | cut -d '/' -f 1 | rev | sed s/.variant_calling_detail_metrics//g | awk '{printf("-I=metrics/%s ", $1)}'`
 
-    ${gatk_path} --java-option "-Xmx2g -Xms2g" \
+    ${gatk_path} --java-options "-Xmx2g -Xms2g" \
     AccumulateVariantCallingMetrics \
-    --$INPUT \
-    --O ${output_prefix}
+    $INPUT \
+    -O ${output_prefix}
   >>>
   runtime {
     docker: docker
