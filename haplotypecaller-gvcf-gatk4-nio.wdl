@@ -25,8 +25,7 @@
 
 # WORKFLOW DEFINITION 
 workflow HaplotypeCallerGvcf_GATK4 {
-  File input_bam
-  File input_bam_index
+  String input_bam
   File ref_dict
   File ref_fasta
   File ref_fasta_index
@@ -61,7 +60,6 @@ workflow HaplotypeCallerGvcf_GATK4 {
     call HaplotypeCaller {
       input:
         input_bam = input_bam,
-        input_bam_index = input_bam_index,
         interval_list = interval_file,
         output_filename = output_filename,
         ref_dict = ref_dict,
@@ -95,10 +93,8 @@ workflow HaplotypeCallerGvcf_GATK4 {
 
 # HaplotypeCaller per-sample in GVCF mode
 task HaplotypeCaller {
-  File input_bam
-  File input_bam_index
+  String input_bam
   File interval_list
-
   String output_filename
   File ref_dict
   File ref_fasta
@@ -148,7 +144,6 @@ task HaplotypeCaller {
     File output_vcf_index = "${output_filename}.tbi"
   }
 }
-
 # Merge GVCFs generated per-interval for the same sample
 task MergeGVCFs {
   Array[File] input_vcfs
@@ -189,3 +184,4 @@ task MergeGVCFs {
     File output_vcf_index = "${output_filename}.tbi"
   }
 }
+
