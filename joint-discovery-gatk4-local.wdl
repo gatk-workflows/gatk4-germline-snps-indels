@@ -860,8 +860,8 @@ task GatherMetrics {
     
     ${gatk_path} --java-options "-Xmx2g -Xms2g" \
     AccumulateVariantCallingMetrics \
-    --INPUT ${sep=" -INPUT " input_details_fofn} \
-    --O ${output_prefix}
+    --INPUT ${sep=" --INPUT " input_details_fofn} \
+    --OUTPUT ${output_prefix}
   >>>
   runtime {
     docker: docker
