@@ -1,0 +1,48 @@
+{
+  "JointGenotyping.ref_dict": "Homo_sapiens_assembly38.dict",
+  "JointGenotyping.ref_fasta": "Homo_sapiens_assembly38.fasta",
+  "JointGenotyping.ref_fasta_index": "Homo_sapiens_assembly38.fasta.fai",
+
+  "JointGenotyping.eval_interval_list": "/share/ScratchGeneral/evaben/wgs_evaluation_regions.hg38.interval_list",
+  "JointGenotyping.unpadded_intervals_file": "/share/ScratchGeneral/evaben/hg38.even.handcurated.20k.intervals",
+
+  "JointGenotyping.dbsnp_vcf": "Homo_sapiens_assembly38.dbsnp138.vcf",
+  "JointGenotyping.dbsnp_vcf_index": "Homo_sapiens_assembly38.dbsnp138.vcf.idx",
+  "JointGenotyping.one_thousand_genomes_resource_vcf": "1000G_phase1.snps.high_confidence.hg38.vcf.gz",
+  "JointGenotyping.one_thousand_genomes_resource_vcf_index": "1000G_phase1.snps.high_confidence.hg38.vcf.gz.tbi",
+  "JointGenotyping.omni_resource_vcf": "1000G_omni2.5.hg38.vcf.gz",
+  "JointGenotyping.omni_resource_vcf_index": "1000G_omni2.5.hg38.vcf.gz.tbi",
+  "JointGenotyping.mills_resource_vcf": "Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
+  "JointGenotyping.mills_resource_vcf_index": "Mills_and_1000G_gold_standard.indels.hg38.vcf.gz.tbi",
+  "JointGenotyping.axiomPoly_resource_vcf": "Axiom_Exome_Plus.genotypes.all_populations.poly.hg38.vcf.gz",
+  "JointGenotyping.axiomPoly_resource_vcf_index": "Axiom_Exome_Plus.genotypes.all_populations.poly.hg38.vcf.gz.tbi",
+  "JointGenotyping.hapmap_resource_vcf": "hapmap_3.3.hg38.vcf.gz",
+  "JointGenotyping.hapmap_resource_vcf_index": "hapmap_3.3.hg38.vcf.gz.tbi",
+
+  "JointGenotyping.snp_filter_level": 99.7,
+  "JointGenotyping.indel_filter_level": 99.7,
+  "JointGenotyping.indel_recalibration_annotation_values": ["FS", "ReadPosRankSum", "MQRankSum", "QD", "SOR", "DP"],
+  "JointGenotyping.indel_recalibration_tranche_values": ["100.0", "99.95", "99.9", "99.5", "99.0", "97.0", "96.0", "95.0", "94.0", "93.5", "93.0", "92.0", "91.0", "90.0"],
+  "JointGenotyping.snp_recalibration_tranche_values": ["100.0", "99.95", "99.9", "99.8", "99.6", "99.5", "99.4", "99.3", "99.0", "98.0", "97.0", "90.0" ],
+  "JointGenotyping.snp_recalibration_annotation_values": ["QD", "MQRankSum", "ReadPosRankSum", "FS", "MQ", "SOR", "DP"],
+
+  "JointGenotyping.gatk_path": "/bin/gatk",
+
+  "JointGenotyping.ApplyRecalibration.java_opt": "-Xmx5g -Xms5g",
+  "JointGenotyping.ApplyRecalibration.mem_size": "15 GB",
+
+  "JointGenotyping.CollectVariantCallingMetrics.java_opt": "-Xmx6g -Xms6g",
+  "JointGenotyping.CollectVariantCallingMetrics.mem_size": "16 GB",
+
+  "JointGenotyping.GenotypeGVCFs.java_opt": "-Xmx5g -Xms5g",
+  "JointGenotyping.GenotypeGVCFs.mem_size": "15 GB",
+
+  "JointGenotyping.IndelsVariantRecalibrator.java_opt": "-Xmx24g -Xms24g",
+  "JointGenotyping.IndelsVariantRecalibrator.mem_size": "34 GB",
+
+  "JointGenotyping.GatherVcfs.java_opt": "-Xmx6g -Xms6g",
+  "JointGenotyping.GatherVcfs.mem_size": "16 GB",
+
+  "JointGenotyping.SNPsVariantRecalibrator.java_opt": "-Xmx3g -Xms3g",
+  "JointGenotyping.SNPsVariantRecalibrator.mem_size": "13 GB"
+}
