@@ -1,10 +1,13 @@
 {
+  "JointGenotyping.callset_name": "ERR250256",
+  "JointGenotyping.sample_name_map": "sample_map",
+
   "JointGenotyping.ref_dict": "Homo_sapiens_assembly38.dict",
   "JointGenotyping.ref_fasta": "Homo_sapiens_assembly38.fasta",
   "JointGenotyping.ref_fasta_index": "Homo_sapiens_assembly38.fasta.fai",
 
-  "JointGenotyping.eval_interval_list": "/share/ScratchGeneral/evaben/wgs_evaluation_regions.hg38.interval_list",
-  "JointGenotyping.unpadded_intervals_file": "/share/ScratchGeneral/evaben/hg38.even.handcurated.20k.intervals",
+  "JointGenotyping.eval_interval_list": "wgs_evaluation_regions.hg38.interval_list",
+  "JointGenotyping.unpadded_intervals_file": "hg38.autosome.xy.intervals",
 
   "JointGenotyping.dbsnp_vcf": "Homo_sapiens_assembly38.dbsnp138.vcf",
   "JointGenotyping.dbsnp_vcf_index": "Homo_sapiens_assembly38.dbsnp138.vcf.idx",

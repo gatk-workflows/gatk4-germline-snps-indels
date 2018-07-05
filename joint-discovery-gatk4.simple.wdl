@@ -1,5 +1,6 @@
 version 1.0
 ## Copyright Broad Institute, 2018
+## Copyright Garvan Institute, 2018
 ##
 ## This WDL implements the joint discovery and VQSR filtering portion of the GATK
 ## Best Practices (June 2016) for germline SNP and Indel discovery in human
@@ -15,8 +16,10 @@ version 1.0
 ##   are present in the input VCF are retained; filtered sites are annotated as such
 ##   in the FILTER field.
 ##
-## Runtime parameters are optimized for Broad's Google Cloud Platform implementation.
-## For program versions, see docker containers.
+## Workflow has been simplified and will not scale like the original.
+## See https://github.com/gatk-workflows/gatk4-germline-snps-indels/blob/master/joint-discovery-gatk4.wdl
+## For a workflow intended to scale
+## runtime parameters have been set from a measured single GVCF run and will likely not scale.
 ##
 ## LICENSING :
 ## This script is released under the WDL source code license (BSD-3) (see LICENSE in
@@ -51,10 +54,10 @@ workflow JointGenotyping {
 
     String gatk_path
 
-    Array[String] snp_recalibration_tranche_values
-    Array[String] snp_recalibration_annotation_values
-    Array[String] indel_recalibration_tranche_values
-    Array[String] indel_recalibration_annotation_values
+    Array[String]+ snp_recalibration_tranche_values
+    Array[String]+ snp_recalibration_annotation_values
+    Array[String]+ indel_recalibration_tranche_values
+    Array[String]+ indel_recalibration_annotation_values
 
     # These intervals are used for CollectVariantCallingMetrics
     File eval_interval_list
@@ -78,7 +81,8 @@ workflow JointGenotyping {
   }
 
   # possible file size issue with cromwell
-  Array[String] unpadded_intervals = read_lines(unpadded_intervals_file)
+  # see system.input-read-limits
+  Array[String]+ unpadded_intervals = read_lines(unpadded_intervals_file)
 
   scatter (idx in range(length(unpadded_intervals))) {
     call GenotypeGVCFs {
@@ -183,7 +187,7 @@ task GetLines {
     File input_file
   }
   command <<<
-    wc -l  < ~{input_file}
+    wc -l < ~{input_file}
   >>>
   output {
     Int sample_count = read_int(stdout())
@@ -204,7 +208,7 @@ task GenotypeGVCFs {
     File ref_fasta_index
     File ref_dict
 
-    String dbsnp_vcf
+    File dbsnp_vcf
 
     Int batch_size
     String mem_size
@@ -264,8 +268,8 @@ task IndelsVariantRecalibrator {
     String recalibration_filename
     String tranches_filename
 
-    Array[String] recalibration_tranche_values
-    Array[String] recalibration_annotation_values
+    Array[String]+ recalibration_tranche_values
+    Array[String]+ recalibration_annotation_values
 
     File sites_only_variant_filtered_vcf
     File sites_only_variant_filtered_vcf_index
@@ -290,12 +294,12 @@ task IndelsVariantRecalibrator {
       -O "~{recalibration_filename}" \
       --tranches-file "~{tranches_filename}" \
       --trust-all-polymorphic \
-      -tranche "~{sep=' -tranche ' recalibration_tranche_values}" \
-      -an "~{sep=' -an ' recalibration_annotation_values}" \
+      -tranche "~{sep='" -tranche "' recalibration_tranche_values}" \
+      -an "~{sep='" -an "' recalibration_annotation_values}" \
       -mode INDEL \
       --max-gaussians 4 \
       -resource mills,known=false,training=true,truth=true,prior=12:"~{mills_resource_vcf}" \
-      "~{'-resource axiomPoly,known=false,training=true,truth=false,prior=10:' + axiomPoly_resource_vcf}" \
+      ~{'-resource "axiomPoly,known=false,training=true,truth=false,prior=10:' + axiomPoly_resource_vcf + '"'} \
       -resource dbsnp,known=true,training=false,truth=false,prior=2:"~{dbsnp_vcf}"
   >>>
   runtime {
@@ -314,8 +318,8 @@ task SNPsVariantRecalibrator {
     String recalibration_filename
     String tranches_filename
 
-    Array[String] recalibration_tranche_values
-    Array[String] recalibration_annotation_values
+    Array[String]+ recalibration_tranche_values
+    Array[String]+ recalibration_annotation_values
 
     File sites_only_variant_filtered_vcf
     File sites_only_variant_filtered_vcf_index
@@ -342,8 +346,8 @@ task SNPsVariantRecalibrator {
       -O "~{recalibration_filename}" \
       --tranches-file "~{tranches_filename}" \
       --trust-all-polymorphic \
-      -tranche "~{sep=' -tranche ' recalibration_tranche_values}" \
-      -an "~{sep=' -an ' recalibration_annotation_values}" \
+      -tranche "~{sep='" -tranche "' recalibration_tranche_values}" \
+      -an "~{sep='" -an "' recalibration_annotation_values}" \
       -mode SNP \
       --max-gaussians 6 \
       -resource hapmap,known=false,training=true,truth=true,prior=15:"~{hapmap_resource_vcf}" \
@@ -418,7 +422,7 @@ task ApplyRecalibration {
 
 task GatherVcfs {
   input {
-    Array[File] inputs
+    Array[File]+ inputs
     String output_vcf_filename
     String gatk_path
     String java_opt
@@ -432,7 +436,7 @@ task GatherVcfs {
     # ignoreSafetyChecks make a big performance difference so we include it in our invocation
     "~{gatk_path}" --java-options "~{java_opt}" \
     GatherVcfsCloud \
-    --input "~{sep=' --input ' inputs}" \
+    --input "~{sep='" --input "' inputs}" \
     --output "~{output_vcf_filename}"
 
     "~{gatk_path}" --java-options "~{java_opt}" \
@@ -445,7 +449,7 @@ task GatherVcfs {
   }
   output {
     File output_vcf = "~{output_vcf_filename}"
-    File output_vcf_index = "~{output_vcf_filename}".tbi
+    File output_vcf_index = "~{output_vcf_filename}.tbi"
   }
 }
 
@@ -477,8 +481,8 @@ task CollectVariantCallingMetrics {
       --TARGET_INTERVALS "~{interval_list}"
   >>>
   output {
-    File detail_metrics_file = "~{metrics_filename_prefix}".variant_calling_detail_metrics
-    File summary_metrics_file = "~{metrics_filename_prefix}".variant_calling_summary_metrics
+    File detail_metrics_file = "~{metrics_filename_prefix}.variant_calling_detail_metrics"
+    File summary_metrics_file = "~{metrics_filename_prefix}.variant_calling_summary_metrics"
   }
   runtime {
     memory: mem_size
