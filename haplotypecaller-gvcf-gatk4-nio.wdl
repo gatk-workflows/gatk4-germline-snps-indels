@@ -25,7 +25,8 @@
 
 # WORKFLOW DEFINITION 
 workflow HaplotypeCallerGvcf_GATK4 {
-  String input_bam
+  File input_bam
+  File input_bam_index
   File ref_dict
   File ref_fasta
   File ref_fasta_index
@@ -113,7 +114,7 @@ task CramToBamTask {
   File ref_fasta
   File ref_fasta_index
   File ref_dict
-  String input_cram
+  File input_cram
   String sample_name
 
   # Runtime parameters
@@ -123,7 +124,7 @@ task CramToBamTask {
   Boolean use_ssd = false
   Int? preemptible_attempts
 
-  Float output_bam_size = size(input_cram, "GB") / 0.60 
+  Float output_bam_size = size(input_cram, "GB") / 0.60
   Float ref_size = size(ref_fasta, "GB") + size(ref_fasta_index, "GB") + size(ref_dict, "GB")
   Int disk_size = ceil(size(input_cram, "GB") + output_bam_size + ref_size) + 20
 
