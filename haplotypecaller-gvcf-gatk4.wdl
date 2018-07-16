@@ -35,16 +35,17 @@ workflow HaplotypeCallerGvcf_GATK4 {
   Boolean? make_gvcf
   Boolean making_gvcf = select_first([make_gvcf,true])
 
-  String gatk_docker
-
-  String gatk_path
+  String? gatk_docker_override
+  String gatk_docker = select_first([gatk_docker_override, "broadinstitute/gatk:4.0.6.0"])
+  String? gatk_path_override
+  String gatk_path = select_first([gatk_path_override, "/gatk/gatk"])
+  String? gitc_docker_override
+  String gitc_docker = select_first([gitc_docker_override, "broadinstitute/genomes-in-the-cloud:2.3.1-1500064817"])
   
   Array[File] scattered_calling_intervals = read_lines(scattered_calling_intervals_list)
 
   String sample_basename = basename(input_bam, ".bam")
-  
   String vcf_basename = sample_basename
-
   String output_suffix = if making_gvcf then ".g.vcf.gz" else ".vcf.gz"
   String output_filename = vcf_basename + output_suffix
 
@@ -54,14 +55,29 @@ workflow HaplotypeCallerGvcf_GATK4 {
   Int potential_hc_divisor = length(scattered_calling_intervals) - 20
   Int hc_divisor = if potential_hc_divisor > 1 then potential_hc_divisor else 1
 
+  #is the input a cram file?
+  Boolean is_cram = sub(basename(input_bam), ".*\\.", "") == "cram"
+
+  if ( is_cram ) {
+    call CramToBamTask {
+          input:
+            input_cram = input_bam,
+            sample_name = basename(sample_basename, ".cram"),
+            ref_dict = ref_dict,
+            ref_fasta = ref_fasta,
+            ref_fasta_index = ref_fasta_index,
+            docker = gitc_docker
+    }
+  }
+
   # Call variants in parallel over grouped calling intervals
   scatter (interval_file in scattered_calling_intervals) {
 
     # Generate GVCF by interval
     call HaplotypeCaller {
       input:
-        input_bam = input_bam,
-        input_bam_index = input_bam_index,
+        input_bam = select_first([CramToBamTask.output_bam, input_bam]),
+        input_bam_index = select_first([CramToBamTask.output_bai, input_bam_index]),
         interval_list = interval_file,
         output_filename = output_filename,
         ref_dict = ref_dict,
@@ -93,12 +109,51 @@ workflow HaplotypeCallerGvcf_GATK4 {
 
 # TASK DEFINITIONS
 
+task CramToBamTask {
+  # Command parameters
+  File ref_fasta
+  File ref_fasta_index
+  File ref_dict
+  String input_cram
+  String sample_name
+
+  # Runtime parameters
+  String docker
+  Int? machine_mem_gb
+  Int? disk_space_gb
+  Boolean use_ssd = false
+  Int? preemptible_attempts
+
+  Float output_bam_size = size(input_cram, "GB") / 0.60
+  Float ref_size = size(ref_fasta, "GB") + size(ref_fasta_index, "GB") + size(ref_dict, "GB")
+  Int disk_size = ceil(size(input_cram, "GB") + output_bam_size + ref_size) + 20
+
+  command {
+    set -e
+    set -o pipefail
+
+    samtools view -h -T ${ref_fasta} ${input_cram} |
+    samtools view -b -o ${sample_name}.bam -
+    samtools index -b ${sample_name}.bam
+    mv ${sample_name}.bam.bai ${sample_name}.bai
+  }
+  runtime {
+    docker: docker
+    memory: select_first([machine_mem_gb, 15]) + " GB"
+    disks: "local-disk " + select_first([disk_space_gb, disk_size]) + if use_ssd then " SSD" else " HDD"
+    preemptibe: preemptible_attempts
+ }
+  output {
+    File output_bam = "${sample_name}.bam"
+    File output_bai = "${sample_name}.bai"
+  }
+}
+
 # HaplotypeCaller per-sample in GVCF mode
 task HaplotypeCaller {
   File input_bam
   File input_bam_index
   File interval_list
-
   String output_filename
   File ref_dict
   File ref_fasta
@@ -148,7 +203,6 @@ task HaplotypeCaller {
     File output_vcf_index = "${output_filename}.tbi"
   }
 }
-
 # Merge GVCFs generated per-interval for the same sample
 task MergeGVCFs {
   Array[File] input_vcfs
