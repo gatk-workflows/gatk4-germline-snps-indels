@@ -49,11 +49,6 @@ workflow HaplotypeCallerGvcf_GATK4 {
   String output_suffix = if making_gvcf then ".g.vcf.gz" else ".vcf.gz"
   String output_filename = vcf_basename + output_suffix
 
-  # We need disk to localize the sharded input and output due to the scatter for HaplotypeCaller.
-  # If we take the number we are scattering by and reduce by 20 we will have enough disk space
-  # to account for the fact that the data is quite uneven across the shards.
-  Int potential_hc_divisor = length(scattered_calling_intervals) - 20
-  Int hc_divisor = if potential_hc_divisor > 1 then potential_hc_divisor else 1
 
   #is the input a cram file?
   Boolean is_cram = sub(basename(input_bam), ".*\\.", "") == "cram"
@@ -83,7 +78,6 @@ workflow HaplotypeCallerGvcf_GATK4 {
         ref_dict = ref_dict,
         ref_fasta = ref_fasta,
         ref_fasta_index = ref_fasta_index,
-        hc_scatter = hc_divisor,
         make_gvcf = making_gvcf,
         docker = gatk_docker,
         gatk_path = gatk_path
@@ -160,7 +154,6 @@ task HaplotypeCaller {
   File ref_fasta_index
   Float? contamination
   Boolean make_gvcf
-  Int hc_scatter
 
   String gatk_path
   String? java_options
@@ -177,7 +170,7 @@ task HaplotypeCaller {
   Int command_mem_gb = machine_mem_gb - 1
 
   Float ref_size = size(ref_fasta, "GB") + size(ref_fasta_index, "GB") + size(ref_dict, "GB")
-  Int disk_size = ceil(((size(input_bam, "GB") + 30) / hc_scatter) + ref_size) + 20
+  Int disk_size = ceil(size(input_bam, "GB") + ref_size) + 20
 
   command <<<
   set -e
