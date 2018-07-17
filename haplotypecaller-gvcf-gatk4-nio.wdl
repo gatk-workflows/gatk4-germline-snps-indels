@@ -44,7 +44,10 @@ workflow HaplotypeCallerGvcf_GATK4 {
   
   Array[File] scattered_calling_intervals = read_lines(scattered_calling_intervals_list)
 
-  String sample_basename = basename(input_bam, ".bam")
+  #is the input a cram file?
+  Boolean is_cram = sub(basename(input_bam), ".*\\.", "") == "cram"
+
+  String sample_basename = if is_cram then  basename(input_bam, ".cram") else basename(input_bam, ".bam")
   String vcf_basename = sample_basename
   String output_suffix = if making_gvcf then ".g.vcf.gz" else ".vcf.gz"
   String output_filename = vcf_basename + output_suffix
@@ -55,14 +58,12 @@ workflow HaplotypeCallerGvcf_GATK4 {
   Int potential_hc_divisor = length(scattered_calling_intervals) - 20
   Int hc_divisor = if potential_hc_divisor > 1 then potential_hc_divisor else 1
 
-  #is the input a cram file?
-  Boolean is_cram = sub(basename(input_bam), ".*\\.", "") == "cram"
 
   if ( is_cram ) {
     call CramToBamTask {
           input:
             input_cram = input_bam,
-            sample_name = basename(sample_basename, ".cram"),
+            sample_name = sample_basename,
             ref_dict = ref_dict,
             ref_fasta = ref_fasta,
             ref_fasta_index = ref_fasta_index,
