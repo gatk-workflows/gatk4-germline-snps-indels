@@ -142,7 +142,7 @@ task CramToBamTask {
     docker: docker
     memory: select_first([machine_mem_gb, 15]) + " GB"
     disks: "local-disk " + select_first([disk_space_gb, disk_size]) + if use_ssd then " SSD" else " HDD"
-    preemptibe: preemptible_attempts
+    preemptible: preemptible_attempts
  }
   output {
     File output_bam = "${sample_name}.bam"
