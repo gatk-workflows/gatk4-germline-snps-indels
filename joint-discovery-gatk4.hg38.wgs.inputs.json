@@ -36,11 +36,10 @@
   "JointGenotyping.snp_recalibration_annotation_values": ["QD", "MQRankSum", "ReadPosRankSum", "FS", "MQ", "SOR", "DP"],
 
   "##_COMMENT4": "DOCKERS", 
-  "JointGenotyping.python_docker": "python:2.7",
-  "JointGenotyping.gatk_docker": "broadinstitute/gatk:4.0.6.0",
+  "#PreProcessingForVariantDiscovery_GATK4.gatk_docker_override": "String? (optional)",
 
   "##_COMMENT5": "PATHS", 
-  "JointGenotyping.gatk_path": "/gatk/gatk",
+  "#PreProcessingForVariantDiscovery_GATK4.gatk_path_override": "String? (optional)",
 
   "##_COMMENT6": "JAVA OPTIONS", 
   "JointGenotyping.SNPsVariantRecalibratorScattered.java_opt": "-Xmx3g -Xms3g",
@@ -74,24 +73,12 @@
   "JointGenotyping.SNPGatherTranches.mem_size": "7 GB",
 
   "##_COMMENT8": "DISK SIZE ALLOCATION",
-  "JointGenotyping.small_disk": 100,
-  "JointGenotyping.medium_disk": 200,
-  "JointGenotyping.large_disk": 300,
-  "JointGenotyping.huge_disk": 400,
+  "#JointGenotyping.small_disk_override": "Int? (optional)",
+  "#JointGenotyping.medium_disk_override": "Int? (optional)",
+  "#JointGenotyping.large_disk_override": "Int? (optional)",
+  "#JointGenotyping.huge_disk_override": "Int? (optional)",
 
   "##_COMMENT9": "PREEMPTIBLES",
-  "JointGenotyping.FinalGatherVcf.preemptibles": 5,
-  "JointGenotyping.IndelsVariantRecalibrator.preemptibles": 5,
-  "JointGenotyping.SNPsVariantRecalibratorScattered.preemptibles": 5,
-  "JointGenotyping.HardFilterAndMakeSitesOnlyVcf.preemptibles": 5,
-  "JointGenotyping.CollectMetricsOnFullVcf.preemptibles": 5,
-  "JointGenotyping.GatherMetrics.preemptibles": 5,
-  "JointGenotyping.SNPGatherTranches.preemptibles": 5,
-  "JointGenotyping.SitesOnlyGatherVcf.preemptibles": 5,
-  "JointGenotyping.CollectMetricsSharded.preemptibles": 5,
-  "JointGenotyping.ApplyRecalibration.preemptibles": 5,
-  "JointGenotyping.ImportGVCFs.preemptibles": 5,
-  "JointGenotyping.SNPsVariantRecalibratorCreateModel.preemptibles": 5,
-  "JointGenotyping.GenotypeGVCFs.preemptibles": 5,
-  "JointGenotyping.DynamicallyCombineIntervals.preemptibles": 5
+  "#PreProcessingForVariantDiscovery_GATK4.preemptible_tries_override": "Int? (optional)"
 }
+
