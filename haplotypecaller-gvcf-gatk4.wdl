@@ -41,7 +41,9 @@ workflow HaplotypeCallerGvcf_GATK4 {
   String gatk_path = select_first([gatk_path_override, "/gatk/gatk"])
   String? gitc_docker_override
   String gitc_docker = select_first([gitc_docker_override, "broadinstitute/genomes-in-the-cloud:2.3.1-1500064817"])
-  
+  String? samtools_path_override
+  String samtools_path = select_first([samtools_path_override, "samtools"])
+ 
   Array[File] scattered_calling_intervals = read_lines(scattered_calling_intervals_list)
 
   #is the input a cram file?
@@ -60,7 +62,8 @@ workflow HaplotypeCallerGvcf_GATK4 {
             ref_dict = ref_dict,
             ref_fasta = ref_fasta,
             ref_fasta_index = ref_fasta_index,
-            docker = gitc_docker
+            docker = gitc_docker,
+            samtools_path = samtools_path
     }
   }
 
@@ -116,6 +119,7 @@ task CramToBamTask {
   Int? disk_space_gb
   Boolean use_ssd = false
   Int? preemptible_attempts
+  String samtools_path
 
   Float output_bam_size = size(input_cram, "GB") / 0.60
   Float ref_size = size(ref_fasta, "GB") + size(ref_fasta_index, "GB") + size(ref_dict, "GB")
@@ -125,9 +129,9 @@ task CramToBamTask {
     set -e
     set -o pipefail
 
-    samtools view -h -T ${ref_fasta} ${input_cram} |
-    samtools view -b -o ${sample_name}.bam -
-    samtools index -b ${sample_name}.bam
+    ${samtools_path} view -h -T ${ref_fasta} ${input_cram} |
+    ${samtools_path} view -b -o ${sample_name}.bam -
+    ${samtools_path} index -b ${sample_name}.bam
     mv ${sample_name}.bam.bai ${sample_name}.bai
   }
   runtime {

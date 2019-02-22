@@ -23,6 +23,7 @@
   
   "##_COMMENT6": "PATHS", 
   "#HaplotypeCallerGvcf_GATK4.gatk_path_override": "String? (optional)",
+  "#HaplotypeCallerGvcf_GATK4.samtools_path_override": "String? (optional)",
 
   "##_COMMENT7": "JAVA OPTIONS", 
   "#HaplotypeCallerGvcf_GATK4.HaplotypeCaller.java_options": "String? (optional)",
