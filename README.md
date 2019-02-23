@@ -1,30 +1,33 @@
 # gatk4-germline-snps-indels
 
 ### Purpose : 
-Workflows for germline short variant discovery with GATK4. 
+Workflows for [germline short variant discovery](https://software.broadinstitute.org/gatk/best-practices/workflow?id=11145) with GATK4. 
 
 ### haplotypecaller-gvcf-gatk :
-The haplotypecaller-gvcf-gatk4 workflow runs HaplotypeCaller 
-from GATK4 in GVCF mode on a single sample according to the GATK Best Practices, 
-scattered across intervals.
+The haplotypecaller-gvcf-gatk4 workflow runs the HaplotypeCaller tool
+from GATK4 in GVCF mode on a single sample according to GATK Best Practices. 
+When executed the workflow scatters the HaplotypeCaller tool over a sample 
+using an intervals list file. The output file produced will be a 
+single gvcf file which can be used by the joint-discovery workflow.
 
 #### Requirements/expectations
 - One analysis-ready BAM file for a single sample (as identified in RG:SM)
-- Set of variant calling intervals lists for the scatter, provided in a file
+- A file containing a set of variant calling interval list for the scatter
+
 #### Outputs 
 - One GVCF file and its index
 
 ### joint-discovery-gatk :
-The second WDL implements the joint discovery and VQSR 
-filtering portion of the GATK Best Practices (June 2016) for germline SNP and Indel 
-discovery in human whole-genome sequencing (WGS) and exome sequencing data.
+This WDL implements the joint calling and VQSR filtering portion of the 
+GATK Best Practices for germline SNP and Indel discovery 
+in human whole-genome sequencing (WGS).
 
 *NOTE: joint-discovery-gatk4-local.wdl is a slightly modified version of the original to support users interested in running the workflow locally.*
 
 #### Requirements/expectations
 - One or more GVCFs produced by HaplotypeCaller in GVCF mode
 - Bare minimum 1 WGS sample or 30 Exome samples. Gene panels are not supported.
-- When deteriming disk size in the json, use the guideline below
+- When determining disk size in the JSON, use the guideline below
   - small_disk = (num_gvcfs / 10) + 10
   - medium_disk = (num_gvcfs * 15) + 10
   - huge_disk = num_gvcfs + 10
@@ -36,11 +39,11 @@ discovery in human whole-genome sequencing (WGS) and exome sequencing data.
   in the FILTER field.
 
 ### Software version requirements :
-- GATK 4 or later 
-- Samtools (see gotc docker)
+- GATK 4.1 
+- Samtools 1.3.1
 - Python 2.7
 - Cromwell version support 
-  - Successfully tested on v31
+  - Successfully tested on v37
   - Does not work on versions < v23 due to output syntax
 
 ### IMPORTANT NOTE : 
@@ -78,4 +81,6 @@ view the following tutorial [(How to) Execute Workflows from the gatk-workflows 
 ### LICENSING :
 Copyright Broad Institute, 2019 | BSD-3
 This script is released under the WDL open source code license (BSD-3) (full license text at https://github.com/openwdl/wdl/blob/master/LICENSE). Note however that the programs it calls may be subject to different licenses. Users are responsible for checking that they are authorized to run all programs before running this script.
+- [GATK](https://software.broadinstitute.org/gatk/download/licensing.php)
+- [Samtools](http://www.htslib.org/terms/)
 

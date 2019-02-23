@@ -1,7 +1,10 @@
 ## Copyright Broad Institute, 2019
 ## 
-## This WDL workflow runs HaplotypeCaller from GATK4 in GVCF mode on a single sample 
-## according to the GATK Best Practices (June 2016), scattered across intervals.
+## The haplotypecaller-gvcf-gatk4 workflow runs the HaplotypeCaller tool
+## from GATK4 in GVCF mode on a single sample according to GATK Best Practices.
+## When executed the workflow scatters the HaplotypeCaller tool over a sample
+## using an intervals list file. The output file produced will be a
+## single gvcf file which can be used by the joint-discovery workflow.
 ##
 ## Requirements/expectations :
 ## - One analysis-ready BAM file for a single sample (as identified in RG:SM)
