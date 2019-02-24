@@ -22,7 +22,13 @@ This WDL implements the joint calling and VQSR filtering portion of the
 GATK Best Practices for germline SNP and Indel discovery 
 in human whole-genome sequencing (WGS).
 
-*NOTE: joint-discovery-gatk4-local.wdl is a slightly modified version of the original to support users interested in running the workflow locally.*
+*NOTE: 
+- joint-discovery-gatk4-local.wdl is a slightly modified version of the 
+original to support users interested in running the workflow locally.
+- joint-discovery-gatk4-fc.wdl is a slightly modified version of the 
+original to support users interested in running the workflow firecloud with and
+using an array of gvcfs as input.*
+
 
 #### Requirements/expectations
 - One or more GVCFs produced by HaplotypeCaller in GVCF mode
