@@ -1,7 +1,10 @@
-## Copyright Broad Institute, 2017
+## Copyright Broad Institute, 2019
 ## 
-## This WDL workflow runs HaplotypeCaller from GATK4 in GVCF mode on a single sample 
-## according to the GATK Best Practices (June 2016), scattered across intervals.
+## The haplotypecaller-gvcf-gatk4 workflow runs the HaplotypeCaller tool
+## from GATK4 in GVCF mode on a single sample according to GATK Best Practices.
+## When executed the workflow scatters the HaplotypeCaller tool over a sample
+## using an intervals list file. The output file produced will be a
+## single gvcf file which can be used by the joint-discovery workflow.
 ##
 ## Requirements/expectations :
 ## - One analysis-ready BAM file for a single sample (as identified in RG:SM)
@@ -11,7 +14,7 @@
 ## - One GVCF file and its index
 ##
 ## Cromwell version support 
-## - Successfully tested on v31
+## - Successfully tested on v37
 ## - Does not work on versions < v23 due to output syntax
 ##
 ## Runtime parameters are optimized for Broad's Google Cloud Platform implementation.
@@ -36,12 +39,14 @@ workflow HaplotypeCallerGvcf_GATK4 {
   Boolean making_gvcf = select_first([make_gvcf,true])
 
   String? gatk_docker_override
-  String gatk_docker = select_first([gatk_docker_override, "broadinstitute/gatk:4.0.6.0"])
+  String gatk_docker = select_first([gatk_docker_override, "broadinstitute/gatk:4.1.0.0"])
   String? gatk_path_override
   String gatk_path = select_first([gatk_path_override, "/gatk/gatk"])
   String? gitc_docker_override
   String gitc_docker = select_first([gitc_docker_override, "broadinstitute/genomes-in-the-cloud:2.3.1-1500064817"])
-  
+  String? samtools_path_override
+  String samtools_path = select_first([samtools_path_override, "samtools"])
+ 
   Array[File] scattered_calling_intervals = read_lines(scattered_calling_intervals_list)
 
   #is the input a cram file?
@@ -67,7 +72,8 @@ workflow HaplotypeCallerGvcf_GATK4 {
             ref_dict = ref_dict,
             ref_fasta = ref_fasta,
             ref_fasta_index = ref_fasta_index,
-            docker = gitc_docker
+            docker = gitc_docker,
+            samtools_path = samtools_path
     }
   }
 
@@ -124,6 +130,7 @@ task CramToBamTask {
   Int? disk_space_gb
   Boolean use_ssd = false
   Int? preemptible_attempts
+  String samtools_path
 
   Float output_bam_size = size(input_cram, "GB") / 0.60
   Float ref_size = size(ref_fasta, "GB") + size(ref_fasta_index, "GB") + size(ref_dict, "GB")
@@ -133,16 +140,16 @@ task CramToBamTask {
     set -e
     set -o pipefail
 
-    samtools view -h -T ${ref_fasta} ${input_cram} |
-    samtools view -b -o ${sample_name}.bam -
-    samtools index -b ${sample_name}.bam
+    ${samtools_path} view -h -T ${ref_fasta} ${input_cram} |
+    ${samtools_path} view -b -o ${sample_name}.bam -
+    ${samtools_path} index -b ${sample_name}.bam
     mv ${sample_name}.bam.bai ${sample_name}.bai
   }
   runtime {
     docker: docker
     memory: select_first([machine_mem_gb, 15]) + " GB"
     disks: "local-disk " + select_first([disk_space_gb, disk_size]) + if use_ssd then " SSD" else " HDD"
-    preemptible: preemptible_attempts
+    preemptible: select_first([preemptible_attempts, 3])
  }
   output {
     File output_bam = "${sample_name}.bam"

@@ -13,6 +13,7 @@
 ##   (VQSR) with genotypes for all samples present in the input VCF. All sites that 
 ##   are present in the input VCF are retained; filtered sites are annotated as such 
 ##   in the FILTER field.
+## - Note that the sample_names is what the sample will be called in the output, but not necessarily what the sample name is called in its GVCF.
 ##
 ## Note about VQSR wiring :
 ## The SNP and INDEL models are built in parallel, but then the corresponding 
@@ -44,8 +45,11 @@
 workflow JointGenotyping {
   # Input Sample
   String callset_name
-  File sample_name_map
 
+  Array[String] sample_names    
+  Array[File] input_gvcfs     
+  Array[File] input_gvcfs_indices 
+ 
   # Reference and Resources
   File ref_fasta
   File ref_fasta_index
@@ -74,7 +78,6 @@ workflow JointGenotyping {
   File dbsnp_resource_vcf_index = dbsnp_vcf_index
   
   File unpadded_intervals_file
-
   # Runtime attributes
   String? gatk_docker_override
   String gatk_docker = select_first([gatk_docker_override, "broadinstitute/gatk:4.1.0.0"])
@@ -101,7 +104,7 @@ workflow JointGenotyping {
   Int SNP_VQSR_downsampleFactor
 
   Int num_of_original_intervals = length(read_lines(unpadded_intervals_file))
-  Int num_gvcfs = length(read_lines(sample_name_map))
+  Int num_gvcfs = length(input_gvcfs)
 
   # Make a 2.5:1 interval number to samples in callset ratio interval list
   Int possible_merge_count = floor(num_of_original_intervals / num_gvcfs / 2.5)
@@ -123,7 +126,9 @@ workflow JointGenotyping {
     # the Hellbender (GATK engine) team!
     call ImportGVCFs {
       input:
-        sample_name_map = sample_name_map,
+        sample_names = sample_names,
+        input_gvcfs = input_gvcfs,    
+        input_gvcfs_indices = input_gvcfs_indices,
         interval = unpadded_intervals[idx],
         workspace_dir_name = "genomicsdb",
         disk_size = medium_disk,
@@ -394,7 +399,9 @@ task GetNumberOfSamples {
 }
 
 task ImportGVCFs {
-  File sample_name_map
+  Array[String] sample_names
+  Array[File] input_gvcfs
+  Array[File] input_gvcfs_indices
   String interval
 
   String workspace_dir_name
@@ -407,6 +414,20 @@ task ImportGVCFs {
 
   command <<<
     set -e
+    set -o pipefail
+    
+    python << CODE
+    gvcfs = ['${sep="','" input_gvcfs}']
+    sample_names = ['${sep="','" sample_names}']
+
+    if len(gvcfs)!= len(sample_names):
+      exit(1)
+
+    with open("inputs.list", "w") as fi:
+      for i in range(len(gvcfs)):
+        fi.write(sample_names[i] + "\t" + gvcfs[i] + "\n") 
+
+    CODE
 
     rm -rf ${workspace_dir_name}
 
@@ -420,7 +441,7 @@ task ImportGVCFs {
     --genomicsdb-workspace-path ${workspace_dir_name} \
     --batch-size ${batch_size} \
     -L ${interval} \
-    --sample-name-map ${sample_name_map} \
+    --sample-name-map inputs.list \
     --reader-threads 5 \
     -ip 500
 
@@ -1000,3 +1021,4 @@ task DynamicallyCombineIntervals {
     File output_intervals = "out.intervals"
   }
 }
+

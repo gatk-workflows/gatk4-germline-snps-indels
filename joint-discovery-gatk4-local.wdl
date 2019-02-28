@@ -42,29 +42,20 @@
 ## licensing information pertaining to the included programs.
 
 workflow JointGenotyping {
-  File unpadded_intervals_file
-
+  # Input Sample
   String callset_name
-  
+  Array[String] sample_names
+  Array[File] input_gvcfs 
+  Array[File] input_gvcfs_indices  
+ 
+  # Reference and Resources
   File ref_fasta
   File ref_fasta_index
   File ref_dict
 
   File dbsnp_vcf
   File dbsnp_vcf_index
-
-  Array[String] sample_names
-  Array[File] input_gvcfs 
-  Array[File] input_gvcfs_indices 
-
-  String gatk_docker
-  String gatk_path
-
-  Int small_disk
-  Int medium_disk
-  Int large_disk
-  Int huge_disk
-
+  
   Array[String] snp_recalibration_tranche_values
   Array[String] snp_recalibration_annotation_values
   Array[String] indel_recalibration_tranche_values
@@ -83,6 +74,23 @@ workflow JointGenotyping {
   File axiomPoly_resource_vcf_index
   File dbsnp_resource_vcf = dbsnp_vcf
   File dbsnp_resource_vcf_index = dbsnp_vcf_index
+  
+  File unpadded_intervals_file
+
+  # Runtime attributes
+  String? gatk_docker_override
+  String gatk_docker = select_first([gatk_docker_override, "broadinstitute/gatk:4.1.0.0"])
+  String? gatk_path_override
+  String gatk_path = select_first([gatk_path_override, "/gatk/gatk"])
+
+  Int? small_disk_override
+  Int small_disk = select_first([small_disk_override, "100"])
+  Int? medium_disk_override
+  Int medium_disk = select_first([medium_disk_override, "200"])
+  Int? large_disk_override
+  Int large_disk = select_first([large_disk_override, "300"])
+  Int? huge_disk_override
+  Int huge_disk = select_first([huge_disk_override, "400"])
 
   # ExcessHet is a phred-scaled p-value. We want a cutoff of anything more extreme
   # than a z-score of -4.5 which is a p-value of 3.4e-06, which phred-scaled is 54.69
@@ -344,18 +352,15 @@ workflow JointGenotyping {
 
   output {
     # outputs from the small callset path through the wdl
-    FinalGatherVcf.output_vcf
-    FinalGatherVcf.output_vcf_index
-    CollectMetricsOnFullVcf.detail_metrics_file
-    CollectMetricsOnFullVcf.summary_metrics_file
+    File? output_vcf = FinalGatherVcf.output_vcf
+    File? output_vcf_index = FinalGatherVcf.output_vcf_index
 
-    # outputs from the large callset path through the wdl
-    # (note that we do not list ApplyRecalibration here because it is run in both paths)
-    GatherMetrics.detail_metrics_file
-    GatherMetrics.summary_metrics_file
+    # select metrics from the small callset path and the large callset path
+    File detail_metrics_file = select_first([CollectMetricsOnFullVcf.detail_metrics_file, GatherMetrics.detail_metrics_file])
+    File summary_metrics_file = select_first([CollectMetricsOnFullVcf.summary_metrics_file, GatherMetrics.summary_metrics_file])
 
     # output the interval list generated/used by this run workflow
-    DynamicallyCombineIntervals.output_intervals
+    File output_intervals = DynamicallyCombineIntervals.output_intervals
   }
 }
 
@@ -556,9 +561,9 @@ task IndelsVariantRecalibrator {
       -an ${sep=' -an ' recalibration_annotation_values} \
       -mode INDEL \
       --max-gaussians 4 \
-      -resource mills,known=false,training=true,truth=true,prior=12:${mills_resource_vcf} \
-      -resource axiomPoly,known=false,training=true,truth=false,prior=10:${axiomPoly_resource_vcf} \
-      -resource dbsnp,known=true,training=false,truth=false,prior=2:${dbsnp_resource_vcf}
+      --resource:mills,known=false,training=true,truth=true,prior=12 ${mills_resource_vcf} \
+      --resource:axiomPoly,known=false,training=true,truth=false,prior=10 ${axiomPoly_resource_vcf} \
+      --resource:dbsnp,known=true,training=false,truth=false,prior=2 ${dbsnp_resource_vcf}
   }
   runtime {
     docker: docker
@@ -612,10 +617,10 @@ task SNPsVariantRecalibratorCreateModel {
       --sample-every-Nth-variant ${downsampleFactor} \
       --output-model ${model_report_filename} \
       --max-gaussians 6 \
-      -resource hapmap,known=false,training=true,truth=true,prior=15:${hapmap_resource_vcf} \
-      -resource omni,known=false,training=true,truth=true,prior=12:${omni_resource_vcf} \
-      -resource 1000G,known=false,training=true,truth=false,prior=10:${one_thousand_genomes_resource_vcf} \
-      -resource dbsnp,known=true,training=false,truth=false,prior=7:${dbsnp_resource_vcf}
+      --resource:hapmap,known=false,training=true,truth=true,prior=15 ${hapmap_resource_vcf} \
+      --resource:omni,known=false,training=true,truth=true,prior=12 ${omni_resource_vcf} \
+      --resource:1000G,known=false,training=true,truth=false,prior=10 ${one_thousand_genomes_resource_vcf} \
+      --resource:dbsnp,known=true,training=false,truth=false,prior=7 ${dbsnp_resource_vcf}
   }
   runtime {
     docker: docker
@@ -665,10 +670,10 @@ task SNPsVariantRecalibrator {
       -mode SNP \
       ${"--input-model " + model_report + " --output-tranches-for-scatter "} \
       --max-gaussians 6 \
-      -resource hapmap,known=false,training=true,truth=true,prior=15:${hapmap_resource_vcf} \
-      -resource omni,known=false,training=true,truth=true,prior=12:${omni_resource_vcf} \
-      -resource 1000G,known=false,training=true,truth=false,prior=10:${one_thousand_genomes_resource_vcf} \
-      -resource dbsnp,known=true,training=false,truth=false,prior=7:${dbsnp_resource_vcf}
+      --resource:hapmap,known=false,training=true,truth=true,prior=15:${hapmap_resource_vcf} \
+      --resource:omni,known=false,training=true,truth=true,prior=12:${omni_resource_vcf} \
+      --resource:1000G,known=false,training=true,truth=false,prior=10:${one_thousand_genomes_resource_vcf} \
+      --resource:dbsnp,known=true,training=false,truth=false,prior=7:${dbsnp_resource_vcf}
   }
   runtime {
     docker: docker
