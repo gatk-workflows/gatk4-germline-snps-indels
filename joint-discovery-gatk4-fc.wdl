@@ -705,7 +705,6 @@ task SNPsVariantRecalibrator {
   runtime {
     docker: docker
     memory: machine_mem + " GB"
-    cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
     preemptible: preemptible_tries
   }
