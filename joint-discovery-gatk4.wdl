@@ -660,7 +660,7 @@ task SNPsVariantRecalibrator {
   String gatk_path
   String docker
   Int? machine_mem_gb
-  Int machine_mem = select_first([machine_mem_gb, ceil(2*size(sites_only_variant_filtered_vcf))])
+  Int machine_mem = select_first([machine_mem_gb, ceil(2*size(sites_only_variant_filtered_vcf, "GB" ))])
   Int disk_size
   Int preemptible_tries
 
