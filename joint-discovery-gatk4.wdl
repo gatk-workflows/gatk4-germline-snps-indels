@@ -551,9 +551,17 @@ task IndelsVariantRecalibrator {
   String docker
   Int disk_size
   Int preemptible_tries
+  Int? machine_mem_gb
+  Int auto_mem = ceil(2 * size([sites_only_variant_filtered_vcf,
+                                mills_resource_vcf,
+                                axiomPoly_resource_vcf,
+                                dbsnp_resource_vcf],
+                                "GiB"))
+  Int machine_mem = select_first([machine_mem_gb, if auto_mem < 7 then 7 else auto_mem])
+  Int java_mem = machine_mem-2
 
   command {
-    ${gatk_path} --java-options "-Xmx24g -Xms24g" \
+    ${gatk_path} --java-options "-Xmx${java_mem}g -Xms${java_mem}g" \
       VariantRecalibrator \
       -V ${sites_only_variant_filtered_vcf} \
       -O ${recalibration_filename} \
@@ -569,7 +577,7 @@ task IndelsVariantRecalibrator {
   }
   runtime {
     docker: docker
-    memory: "26 GB"
+    memory: machine_mem_gb + " GB"
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
     preemptible: preemptible_tries
@@ -660,13 +668,19 @@ task SNPsVariantRecalibrator {
   String gatk_path
   String docker
   Int? machine_mem_gb
-  Int auto_mem = ceil(2*size(sites_only_variant_filtered_vcf, "GB" ))
+  Int auto_mem = ceil(2 * size([sites_only_variant_filtered_vcf,
+                                hapmap_resource_vcf,
+                                omni_resource_vcf,
+                                one_thousand_genomes_resource_vcf,
+                                dbsnp_resource_vcf],
+                                "GiB"))
   Int machine_mem = select_first([machine_mem_gb, if auto_mem < 7 then 7 else auto_mem])
+  Int java_mem = machine_mem-2
   Int disk_size
   Int preemptible_tries
 
   command {
-    ${gatk_path} --java-options "-Xmx3g -Xms3g" \
+    ${gatk_path} --java-options "-Xmx${java_mem}g -Xms${java_mem}g" \
       VariantRecalibrator \
       -V ${sites_only_variant_filtered_vcf} \
       -O ${recalibration_filename} \
