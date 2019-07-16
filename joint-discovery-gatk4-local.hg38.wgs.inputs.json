@@ -38,10 +38,10 @@
   "JointGenotyping.snp_recalibration_annotation_values": ["QD", "MQRankSum", "ReadPosRankSum", "FS", "MQ", "SOR", "DP"],
 
   "##_COMMENT4": "DOCKERS", 
-  "#PreProcessingForVariantDiscovery_GATK4.gatk_docker_override": "String? (optional)",
+  "#JointGenotyping.gatk_docker_override": "String? (optional)",
 
   "##_COMMENT5": "PATHS", 
-  "#PreProcessingForVariantDiscovery_GATK4.gatk_path_override": "String? (optional)",
+  "#JointGenotyping.gatk_path_override": "String? (optional)",
 
   "##_COMMENT8": "DISK SIZE ALLOCATION",
   "#JointGenotyping.small_disk_override": "Int? (optional)",
