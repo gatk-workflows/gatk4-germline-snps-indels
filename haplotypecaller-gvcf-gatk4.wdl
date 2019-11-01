@@ -1,3 +1,5 @@
+version 1.0
+
 ## Copyright Broad Institute, 2019
 ## 
 ## The haplotypecaller-gvcf-gatk4 workflow runs the HaplotypeCaller tool
@@ -28,45 +30,53 @@
 
 # WORKFLOW DEFINITION 
 workflow HaplotypeCallerGvcf_GATK4 {
-  File input_bam
-  File input_bam_index
-  File ref_dict
-  File ref_fasta
-  File ref_fasta_index
-  File scattered_calling_intervals_list
+  input {
+    File input_bam
+    File input_bam_index
+    File ref_dict
+    File ref_fasta
+    File ref_fasta_index
+    File scattered_calling_intervals_list
   
-  Boolean? make_gvcf
-  Boolean making_gvcf = select_first([make_gvcf,true])
+    Boolean? make_gvcf
+    Boolean making_gvcf = select_first([make_gvcf,true])
 
-  String? gatk_docker_override
-  String gatk_docker = select_first([gatk_docker_override, "broadinstitute/gatk:4.1.0.0"])
-  String? gatk_path_override
-  String gatk_path = select_first([gatk_path_override, "/gatk/gatk"])
-  String? gitc_docker_override
-  String gitc_docker = select_first([gitc_docker_override, "broadinstitute/genomes-in-the-cloud:2.3.1-1500064817"])
-  String? samtools_path_override
-  String samtools_path = select_first([samtools_path_override, "samtools"])
+    String? gatk_docker_override
+    String gatk_docker = select_first([gatk_docker_override, "broadinstitute/gatk:4.1.4.0"])
+    String? gatk_path_override
+    String gatk_path = select_first([gatk_path_override, "/gatk/gatk"])
+    String? gitc_docker_override
+    String gitc_docker = select_first([gitc_docker_override, "broadinstitute/genomes-in-the-cloud:2.3.1-1500064817"])
+    String? samtools_path_override
+    String samtools_path = select_first([samtools_path_override, "samtools"])
  
-  Array[File] scattered_calling_intervals = read_lines(scattered_calling_intervals_list)
+    Array[File] scattered_calling_intervals = read_lines(scattered_calling_intervals_list)
 
-  #is the input a cram file?
-  Boolean is_cram = sub(basename(input_bam), ".*\\.", "") == "cram"
+    #is the input a cram file?
+    Boolean is_cram = sub(basename(input_bam), ".*\\.", "") == "cram"
 
-  String sample_basename = if is_cram then  basename(input_bam, ".cram") else basename(input_bam, ".bam")
-  String vcf_basename = sample_basename
-  String output_suffix = if making_gvcf then ".g.vcf.gz" else ".vcf.gz"
-  String output_filename = vcf_basename + output_suffix
+    String sample_basename = if is_cram then  basename(input_bam, ".cram") else basename(input_bam, ".bam")
+    String vcf_basename = sample_basename
+    String output_suffix = if making_gvcf then ".g.vcf.gz" else ".vcf.gz"
+    String output_filename = vcf_basename + output_suffix
+
+    # We need disk to localize the sharded input and output due to the scatter for HaplotypeCaller.
+    # If we take the number we are scattering by and reduce by 20 we will have enough disk space
+    # to account for the fact that the data is quite uneven across the shards.
+    Int potential_hc_divisor = length(scattered_calling_intervals) - 20
+    Int hc_divisor = if potential_hc_divisor > 1 then potential_hc_divisor else 1
+  }
 
   if ( is_cram ) {
     call CramToBamTask {
-          input:
-            input_cram = input_bam,
-            sample_name = sample_basename,
-            ref_dict = ref_dict,
-            ref_fasta = ref_fasta,
-            ref_fasta_index = ref_fasta_index,
-            docker = gitc_docker,
-            samtools_path = samtools_path
+      input:
+        input_cram = input_bam,
+        sample_name = sample_basename,
+        ref_dict = ref_dict,
+        ref_fasta = ref_fasta,
+        ref_fasta_index = ref_fasta_index,
+        docker = gitc_docker,
+        samtools_path = samtools_path
     }
   }
 
@@ -83,6 +93,7 @@ workflow HaplotypeCallerGvcf_GATK4 {
         ref_dict = ref_dict,
         ref_fasta = ref_fasta,
         ref_fasta_index = ref_fasta_index,
+        hc_scatter = hc_divisor,
         make_gvcf = making_gvcf,
         docker = gatk_docker,
         gatk_path = gatk_path
@@ -109,25 +120,26 @@ workflow HaplotypeCallerGvcf_GATK4 {
 # TASK DEFINITIONS
 
 task CramToBamTask {
-  # Command parameters
-  File ref_fasta
-  File ref_fasta_index
-  File ref_dict
-  File input_cram
-  String sample_name
+  input {
+    # Command parameters
+    File ref_fasta
+    File ref_fasta_index
+    File ref_dict
+    File input_cram
+    String sample_name
 
-  # Runtime parameters
-  String docker
-  Int? machine_mem_gb
-  Int? disk_space_gb
-  Boolean use_ssd = false
-  Int? preemptible_attempts
-  String samtools_path
-
-  Float output_bam_size = size(input_cram, "GB") / 0.60
-  Float ref_size = size(ref_fasta, "GB") + size(ref_fasta_index, "GB") + size(ref_dict, "GB")
-  Int disk_size = ceil(size(input_cram, "GB") + output_bam_size + ref_size) + 20
-
+    # Runtime parameters
+    String docker
+    Int? machine_mem_gb
+    Int? disk_space_gb
+    Boolean use_ssd = false
+    Int? preemptible_attempts
+    String samtools_path
+  }
+    Float output_bam_size = size(input_cram, "GB") / 0.60
+    Float ref_size = size(ref_fasta, "GB") + size(ref_fasta_index, "GB") + size(ref_dict, "GB")
+    Int disk_size = ceil(size(input_cram, "GB") + output_bam_size + ref_size) + 20
+  
   command {
     set -e
     set -o pipefail
@@ -151,35 +163,50 @@ task CramToBamTask {
 
 # HaplotypeCaller per-sample in GVCF mode
 task HaplotypeCaller {
-  File input_bam
-  File input_bam_index
-  File interval_list
-  String output_filename
-  File ref_dict
-  File ref_fasta
-  File ref_fasta_index
-  Float? contamination
-  Boolean make_gvcf
+  input {
+    # Command parameters
+    File input_bam
+    File input_bam_index
+    File interval_list
+    String output_filename
+    File ref_dict
+    File ref_fasta
+    File ref_fasta_index
+    Float? contamination
+    Boolean make_gvcf
+    Int hc_scatter
 
-  String gatk_path
-  String? java_options
-  String java_opt = select_first([java_options, "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10"])
+    String gatk_path
+    String? java_options
 
-  # Runtime parameters
-  String docker
-  Int? mem_gb
-  Int? disk_space_gb
-  Boolean use_ssd = false
-  Int? preemptible_attempts
+    # Runtime parameters
+    String docker
+    Int? mem_gb
+    Int? disk_space_gb
+    Boolean use_ssd = false
+    Int? preemptible_attempts
+  }
+
+  String java_opt = select_first([java_options, "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10"]) 
 
   Int machine_mem_gb = select_first([mem_gb, 7])
   Int command_mem_gb = machine_mem_gb - 1
 
   Float ref_size = size(ref_fasta, "GB") + size(ref_fasta_index, "GB") + size(ref_dict, "GB")
-  Int disk_size = ceil(size(input_bam, "GB") + ref_size) + 20
-
-  command <<<
-  set -e
+  Int disk_size = ceil(((size(input_bam, "GB") + 30) / hc_scatter) + ref_size) + 20
+  
+  parameter_meta {
+    input_bam: {
+      description: "a bam file",
+      localization_optional: true
+    }
+    input_bam_index: {
+      description: "an index file for the bam input",
+      localization_optional: true
+    }
+  }
+  command {
+    set -e
   
     ${gatk_path} --java-options "-Xmx${command_mem_gb}G ${java_opt}" \
       HaplotypeCaller \
@@ -188,15 +215,13 @@ task HaplotypeCaller {
       -L ${interval_list} \
       -O ${output_filename} \
       -contamination ${default=0 contamination} ${true="-ERC GVCF" false="" make_gvcf}
-  >>>
-
+  }
   runtime {
     docker: docker
     memory: machine_mem_gb + " GB"
     disks: "local-disk " + select_first([disk_space_gb, disk_size]) + if use_ssd then " SSD" else " HDD"
     preemptible: select_first([preemptible_attempts, 3])
   }
-
   output {
     File output_vcf = "${output_filename}"
     File output_vcf_index = "${output_filename}.tbi"
@@ -204,39 +229,38 @@ task HaplotypeCaller {
 }
 # Merge GVCFs generated per-interval for the same sample
 task MergeGVCFs {
-  Array[File] input_vcfs
-  Array[File] input_vcfs_indexes
-  String output_filename
+  input {
+    # Command parameters
+    Array[File] input_vcfs
+    Array[File] input_vcfs_indexes
+    String output_filename
 
-  String gatk_path
+    String gatk_path
 
-  # Runtime parameters
-  String docker
-  Int? mem_gb
-  Int? disk_space_gb
-  Boolean use_ssd = false
-  Int? preemptible_attempts
-
-  Int machine_mem_gb = select_first([mem_gb, 3])
-  Int command_mem_gb = machine_mem_gb - 1
-
-  command <<<
+    # Runtime parameters
+    String docker
+    Int? mem_gb
+    Int? disk_space_gb
+    Boolean use_ssd = false
+    Int? preemptible_attempts
+  }
+    Int machine_mem_gb = select_first([mem_gb, 3])
+    Int command_mem_gb = machine_mem_gb - 1
+  
+  command {
   set -e
 
     ${gatk_path} --java-options "-Xmx${command_mem_gb}G"  \
       MergeVcfs \
       --INPUT ${sep=' --INPUT ' input_vcfs} \
       --OUTPUT ${output_filename}
-  >>>
-
+  }
   runtime {
     docker: docker
     memory: machine_mem_gb + " GB"
     disks: "local-disk " + select_first([disk_space_gb, 100]) + if use_ssd then " SSD" else " HDD"
     preemptible: select_first([preemptible_attempts, 3])
   }
-
-
   output {
     File output_vcf = "${output_filename}"
     File output_vcf_index = "${output_filename}.tbi"
