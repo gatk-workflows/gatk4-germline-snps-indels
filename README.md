@@ -4,11 +4,16 @@
 Workflows for [germline short variant discovery](https://software.broadinstitute.org/gatk/best-practices/workflow?id=11145) with GATK4. 
 
 ### haplotypecaller-gvcf-gatk :
-The haplotypecaller-gvcf-gatk4 workflow runs the HaplotypeCaller tool
-from GATK4 in GVCF mode on a single sample according to GATK Best Practices. 
-When executed the workflow scatters the HaplotypeCaller tool over a sample 
-using an intervals list file. The output file produced will be a 
-single gvcf file which can be used by the joint-discovery workflow.
+The haplotypecaller-gvcf-gatk4 workflow runs the GATK4 HaplotypeCaller tool
+in GVCF mode on a single sample according to GATK Best Practices. When 
+executed the workflow scatters the HaplotypeCaller tool over the input bam sample 
+using an interval list file. The output produced by the workflow will be a single GVCF 
+file which can then be provided to the joint-discovery workflow along with several other 
+GVCF files to call for variants simultaneously, producing a multisample VCF. 
+The haplotypecaller-gvcf-gatk4 workflows default GVCF mode is useful when calling variants 
+for several samples efficiently. However, for instances when calling variants for one or a 
+few samples it is possible to have the workflow directly call variants and output a VCF file by 
+setting the `make_gvcf` input variable to `true`. 
 
 #### Requirements/expectations
 - One analysis-ready BAM file for a single sample (as identified in RG:SM)
@@ -45,7 +50,7 @@ using an array of gvcfs as input.*
   in the FILTER field.
 
 ### Software version requirements :
-- GATK 4.1 
+- GATK 4.1.4.0 
 - Samtools 1.3.1
 - Python 2.7
 - Cromwell version support 
