@@ -8,12 +8,12 @@ The haplotypecaller-gvcf-gatk4 workflow runs the GATK4 HaplotypeCaller tool
 in GVCF mode on a single sample according to GATK Best Practices. When 
 executed the workflow scatters the HaplotypeCaller tool over the input bam sample 
 using an interval list file. The output produced by the workflow will be a single GVCF 
-file which can then be provided to the joint-discovery workflow along with several other 
+file which can then be provided to the JointGenotyping workflow along with several other 
 GVCF files to call for variants simultaneously, producing a multisample VCF. 
 The haplotypecaller-gvcf-gatk4 workflows default GVCF mode is useful when calling variants 
 for several samples efficiently. However, for instances when calling variants for one or a 
 few samples it is possible to have the workflow directly call variants and output a VCF file by 
-setting the `make_gvcf` input variable to `true`. 
+setting the `make_gvcf` input variable to `false`. 
 
 #### Requirements/expectations
 - One analysis-ready BAM file for a single sample (as identified in RG:SM)
@@ -22,22 +22,22 @@ setting the `make_gvcf` input variable to `true`.
 #### Outputs 
 - One GVCF file and its index
 
-### joint-discovery-gatk :
+### JointGenotyping.wdl :
 This WDL implements the joint calling and VQSR filtering portion of the 
 GATK Best Practices for germline SNP and Indel discovery 
-in human whole-genome sequencing (WGS).
+in human whole-genome sequencing (WGS). The workflow accept a sample map 
+file with 50 or more GVCFs and produces a multisample VCF.
 
 *NOTE:*  
-*- joint-discovery-gatk4-local.wdl is a slightly modified version of the 
-original to support users interested in running the workflow locally.*  
-*- joint-discovery-gatk4-fc.wdl is a slightly modified version of the 
-original to support users interested in running the workflow firecloud with and
-using an array of gvcfs as input.*
+*- JointGenotyping-terra.wdl is a slightly modified version of the 
+original workflow to support users interested in running the 
+workflow on Terra. The changes include variables for dockers and disksize, making 
+it easier to configure the workflow.*
 
 
 #### Requirements/expectations
 - One or more GVCFs produced by HaplotypeCaller in GVCF mode
-- Bare minimum 1 WGS sample or 30 Exome samples. Gene panels are not supported.
+- Bare minimum 50 samples. Gene panels are not supported.
 - When determining disk size in the JSON, use the guideline below
   - small_disk = (num_gvcfs / 10) + 10
   - medium_disk = (num_gvcfs * 15) + 10

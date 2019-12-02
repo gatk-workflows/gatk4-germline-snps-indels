@@ -4,7 +4,6 @@ version 1.0
 task CheckSamplesUnique {
   input {
     File sample_name_map
-    Int sample_num_threshold = 50
   }
 
   command {
@@ -13,10 +12,10 @@ task CheckSamplesUnique {
     then
       echo "Samples in the sample_name_map are not unique" 1>&2
       exit 1
-    elif [[ $(cut -f 1 ~{sample_name_map} | wc -l) -lt ~{sample_num_threshold} ]]
+    elif [[ $(cut -f 1 ~{sample_name_map} | wc -l) -lt 50 ]]
     then
-      echo "There are fewer than ~{sample_num_threshold} samples in the sample_name_map" 1>&2
-      echo "Having fewer than ~{sample_num_threshold} samples means there likely isn't enough data to complete joint calling" 1>&2
+      echo "There are less than 50 samples in the sample_name_map" 1>&2
+      echo "Having less than 50 samples means there likely isn't enough data to complete joint calling" 1>&2
       exit 1
     else
       echo true
@@ -46,7 +45,9 @@ task SplitIntervalList {
     Boolean sample_names_unique_done
     Int disk_size
     String scatter_mode = "BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW"
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.1.0"
+    String gatk_docker
+    String gatk_path
+    String preemptible_tries 
   }
 
   parameter_meta {
@@ -56,14 +57,14 @@ task SplitIntervalList {
   }
 
   command <<<
-    gatk --java-options -Xms3g SplitIntervals \
+    ~{gatk_path} --java-options -Xms3g SplitIntervals \
       -L ~{interval_list} -O  scatterDir -scatter ~{scatter_count} -R ~{ref_fasta} \
       -mode ~{scatter_mode}
    >>>
 
   runtime {
     memory: "3.75 GiB"
-    preemptible: 1
+    preemptible: preemptible_tries
     disks: "local-disk " + disk_size + " HDD"
     docker: gatk_docker
   }
@@ -89,7 +90,9 @@ task ImportGVCFs {
 
     # Using a nightly version of GATK containing fixes for GenomicsDB
     # https://github.com/broadinstitute/gatk/pull/5899
-    String gatk_docker = "us.gcr.io/broad-gotc-prod/gatk-nightly:2019-05-07-4.1.2.0-5-g53d015e4f-NIGHTLY-SNAPSHOT"
+    String gatk_docker
+    String gatk_path
+    String preemptible_tries
   }
 
   command <<<
@@ -106,7 +109,7 @@ task ImportGVCFs {
     # a significant amount of non-heap memory for native libraries.
     # Also, testing has shown that the multithreaded reader initialization
     # does not scale well beyond 5 threads, so don't increase beyond that.
-    gatk --java-options -Xms8g \
+    ~{gatk_path} --java-options -Xms8g \
       GenomicsDBImport \
       --genomicsdb-workspace-path ~{workspace_dir_name} \
       --batch-size ~{batch_size} \
@@ -124,7 +127,7 @@ task ImportGVCFs {
     cpu: 4
     disks: "local-disk " + disk_size + " HDD"
     docker: gatk_docker
-    preemptible: 1
+    preemptible: preemptible_tries
   }
 
   output {
@@ -147,9 +150,9 @@ task GenotypeGVCFs {
     String dbsnp_vcf
 
     Int disk_size
-    # This is needed for gVCFs generated with GATK3 HaplotypeCaller
-    Boolean allow_old_rms_mapping_quality_annotation_data = false
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.4.0"
+    String gatk_docker
+    String gatk_path
+    String preemptible_tries
   }
 
     parameter_meta {
@@ -164,7 +167,7 @@ task GenotypeGVCFs {
     tar -xf ~{workspace_tar}
     WORKSPACE=$(basename ~{workspace_tar} .tar)
 
-    gatk --java-options -Xms8g \
+    ~{gatk_path} --java-options -Xms8g \
       GenotypeGVCFs \
       -R ~{ref_fasta} \
       -O ~{output_vcf_filename} \
@@ -174,7 +177,6 @@ task GenotypeGVCFs {
       --use-new-qual-calculator \
       -V gendb://$WORKSPACE \
       -L ~{interval} \
-      ~{true='--allow-old-rms-mapping-quality-annotation-data' false='' allow_old_rms_mapping_quality_annotation_data} \
       --merge-input-intervals
   >>>
 
@@ -182,7 +184,7 @@ task GenotypeGVCFs {
     memory: "26 GiB"
     cpu: 2
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
+    preemptible: preemptible_tries
     docker: gatk_docker
   }
 
@@ -204,6 +206,7 @@ task GnarlyGenotyper {
     String dbsnp_vcf
 
     String gatk_docker = "us.gcr.io/broad-gotc-prod/gnarly_genotyper:fixNegativeRefCount"
+    String preemptible_tries
   }
 
   parameter_meta {
@@ -252,7 +255,7 @@ task GnarlyGenotyper {
     memory: "26 GiB"
     cpu: 2
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
+    preemptible: preemptible_tries
     docker: gatk_docker
   }
 
@@ -275,20 +278,22 @@ task HardFilterAndMakeSitesOnlyVcf {
     String sites_only_vcf_filename
 
     Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.1.0"
+    String gatk_docker
+    String gatk_path
+    String preemptible_tries
   }
 
   command <<<
     set -euo pipefail
 
-    gatk --java-options -Xms3g \
+    ~{gatk_path} --java-options -Xms3g \
       VariantFiltration \
       --filter-expression "ExcessHet > ~{excess_het_threshold}" \
       --filter-name ExcessHet \
       -O ~{variant_filtered_vcf_filename} \
       -V ~{vcf}
 
-    gatk --java-options -Xms3g \
+    ~{gatk_path} --java-options -Xms3g \
       MakeSitesOnlyVcf \
       -I ~{variant_filtered_vcf_filename} \
       -O ~{sites_only_vcf_filename}
@@ -298,7 +303,7 @@ task HardFilterAndMakeSitesOnlyVcf {
     memory: "3.75 GiB"
     cpu: "1"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
+    preemptible: preemptible_tries
     docker: gatk_docker
   }
 
@@ -332,13 +337,15 @@ task IndelsVariantRecalibrator {
     Int max_gaussians = 4
 
     Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.1.0"
+    String gatk_docker
+    String gatk_path
+    String preemptible_tries
   }
 
   command <<<
     set -euo pipefail
 
-    gatk --java-options -Xms24g \
+    ~{gatk_path} --java-options -Xms24g \
       VariantRecalibrator \
       -V ~{sites_only_variant_filtered_vcf} \
       -O ~{recalibration_filename} \
@@ -358,7 +365,7 @@ task IndelsVariantRecalibrator {
     memory: "26 GiB"
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
+    preemptible: preemptible_tries
     docker: gatk_docker
   }
 
@@ -395,13 +402,15 @@ task SNPsVariantRecalibratorCreateModel {
     Int max_gaussians = 6
 
     Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.1.0"
+    String gatk_docker
+    String gatk_path
+    String preemptible_tries
   }
 
   command <<<
     set -euo pipefail
 
-    gatk --java-options -Xms100g \
+    ~{gatk_path} --java-options -Xms100g \
       VariantRecalibrator \
       -V ~{sites_only_variant_filtered_vcf} \
       -O ~{recalibration_filename} \
@@ -424,7 +433,7 @@ task SNPsVariantRecalibratorCreateModel {
     memory: "104 GiB"
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
+    preemptible: preemptible_tries
     docker: gatk_docker
   }
 
@@ -458,7 +467,9 @@ task SNPsVariantRecalibrator {
     Int max_gaussians = 6
 
     Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.1.0"
+    String gatk_docker
+    String gatk_path
+    String preemptible_tries
     Int? machine_mem_gb
 
   }
@@ -480,7 +491,7 @@ task SNPsVariantRecalibrator {
 
     MODEL_REPORT=~{model_report}
 
-    gatk --java-options -Xms~{java_mem}g \
+    ~{gatk_path} --java-options -Xms~{java_mem}g \
       VariantRecalibrator \
       -V ~{sites_only_variant_filtered_vcf} \
       -O ~{recalibration_filename} \
@@ -502,7 +513,7 @@ task SNPsVariantRecalibrator {
     memory: "~{machine_mem} GiB"
     cpu: 2
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
+    preemptible: preemptible_tries
     docker: gatk_docker
   }
 
@@ -519,7 +530,9 @@ task GatherTranches {
     Array[File] tranches
     String output_filename
     Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gotc-prod/gatk4-joint-genotyping:1.3.0-1527875152"
+    String gatk_docker 
+    String gatk_path
+    String preemptible_tries
   }
 
   parameter_meta {
@@ -555,7 +568,7 @@ task GatherTranches {
 
     cat $tranches_fofn | rev | cut -d '/' -f 1 | rev | awk '{print "tranches/" $1}' > inputs.list
 
-    /usr/gitc/gatk --java-options -Xms6g \
+    ~{gatk_path} --java-options -Xms6g \
       GatherTranches \
       --input inputs.list \
       --output ~{output_filename}
@@ -565,7 +578,7 @@ task GatherTranches {
     memory: "7.5 GiB"
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
+    preemptible: preemptible_tries
     docker: gatk_docker
   }
 
@@ -590,13 +603,15 @@ task ApplyRecalibration {
     Float snp_filter_level
     Boolean use_allele_specific_annotations
     Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.1.0"
+    String gatk_docker
+    String gatk_path
+    String preemptible_tries
   }
 
   command <<<
     set -euo pipefail
 
-    gatk --java-options -Xms5g \
+    ~{gatk_path} --java-options -Xms5g \
       ApplyVQSR \
       -O tmp.indel.recalibrated.vcf \
       -V ~{input_vcf} \
@@ -607,7 +622,7 @@ task ApplyRecalibration {
       --create-output-variant-index true \
       -mode INDEL
 
-    gatk --java-options -Xms5g \
+    ~{gatk_path} --java-options -Xms5g \
       ApplyVQSR \
       -O ~{recalibrated_vcf_filename} \
       -V tmp.indel.recalibrated.vcf \
@@ -623,7 +638,7 @@ task ApplyRecalibration {
     memory: "7 GiB"
     cpu: "1"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
+    preemptible: preemptible_tries
     docker: gatk_docker
   }
 
@@ -639,7 +654,9 @@ task GatherVcfs {
     Array[File] input_vcfs
     String output_vcf_name
     Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.1.0"
+    String gatk_docker
+    String gatk_path
+    String preemptible_tries
   }
 
   parameter_meta {
@@ -654,7 +671,7 @@ task GatherVcfs {
     # --ignore-safety-checks makes a big performance difference so we include it in our invocation.
     # This argument disables expensive checks that the file headers contain the same set of
     # genotyped samples and that files are in order by position of first record.
-    gatk --java-options -Xms6g \
+    ~{gatk_path} --java-options -Xms6g \
       GatherVcfsCloud \
       --ignore-safety-checks \
       --gather-type BLOCK \
@@ -668,7 +685,7 @@ task GatherVcfs {
     memory: "7 GiB"
     cpu: "1"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
+    preemptible: preemptible_tries
     docker: gatk_docker
   }
 
@@ -685,7 +702,9 @@ task SelectFingerprintSiteVariants {
     File haplotype_database
     String base_output_name
     Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.1.0"
+    String gatk_docker
+    String gatk_path
+    String preemptible_tries
   }
 
   parameter_meta {
@@ -704,7 +723,7 @@ task SelectFingerprintSiteVariants {
 
     hdb_to_interval_list ~{haplotype_database} > hdb.interval_list
 
-    gatk --java-options -Xms6g \
+    ~{gatk_path} --java-options -Xms6g \
       SelectVariants \
       --variant ~{input_vcf} \
       --intervals hdb.interval_list \
@@ -715,7 +734,7 @@ task SelectFingerprintSiteVariants {
     memory: "7.5 GiB"
     cpu: 1
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
+    preemptible: preemptible_tries
     docker: gatk_docker
   }
 
@@ -736,13 +755,15 @@ task CollectVariantCallingMetrics {
     File interval_list
     File ref_dict
     Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.1.0"
+    String gatk_docker
+    String gatk_path 
+    String preemptible_tries
   }
 
   command <<<
     set -euo pipefail
 
-    gatk --java-options -Xms6g \
+    ~{gatk_path} --java-options -Xms6g \
       CollectVariantCallingMetrics \
       --INPUT ~{input_vcf} \
       --DBSNP ~{dbsnp_vcf} \
@@ -761,7 +782,7 @@ task CollectVariantCallingMetrics {
     memory: "7.5 GiB"
     cpu: 2
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
+    preemptible: preemptible_tries
     docker: gatk_docker
   }
 }
@@ -773,7 +794,9 @@ task GatherVariantCallingMetrics {
     Array[File] input_summaries
     String output_prefix
     Int disk_size
-    String gatk_docker = "us.gcr.io/broad-gotc-prod/gatk4-joint-genotyping:1.3.0-1527875152"
+    String gatk_docker
+    String gatk_path
+    String preemptible_tries
   }
 
   parameter_meta {
@@ -823,7 +846,7 @@ task GatherVariantCallingMetrics {
 
     INPUT=$(cat $input_details_fofn | rev | cut -d '/' -f 1 | rev | sed s/.variant_calling_detail_metrics//g | awk '{printf("--INPUT metrics/%s ", $1)}')
 
-    /usr/gitc/gatk --java-options -Xms2g \
+    ~{gatk_path} --java-options -Xms2g \
       AccumulateVariantCallingMetrics \
       $INPUT \
       --OUTPUT ~{output_prefix}
@@ -833,7 +856,7 @@ task GatherVariantCallingMetrics {
     memory: "3 GiB"
     cpu: "1"
     disks: "local-disk " + disk_size + " HDD"
-    preemptible: 1
+    preemptible: preemptible_tries
     docker: gatk_docker
   }
 
@@ -854,6 +877,7 @@ task CrossCheckFingerprint {
     Boolean scattered = false
     Array[String] expected_inconclusive_samples = []
     String picard_docker = "us.gcr.io/broad-gotc-prod/gatk4-joint-genotyping:yf_fire_crosscheck_picard_with_nio_fast_fail_fast_sample_map"
+    String preemptible_tries
   }
 
   parameter_meta {
@@ -924,7 +948,7 @@ task CrossCheckFingerprint {
   runtime {
     memory: memMb + " MiB"
     disks: "local-disk " + disk + " HDD"
-    preemptible: 0
+    preemptible: preemptible_tries
     docker: picard_docker
   }
 
@@ -972,7 +996,9 @@ task GetFingerprintingIntervalIndices {
   input {
     Array[File] unpadded_intervals
     File haplotype_database
-    String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.1.0"
+    String gatk_docker 
+    String gatk_path
+    String preemptible_tries
   }
 
   command <<<
@@ -1015,7 +1041,7 @@ task GetFingerprintingIntervalIndices {
     hdb_to_interval_list ~{haplotype_database} > hdb.interval_list
 
     # find the intervals that overlap the haplotype_database
-    gatk IntervalListTools \
+    ~{gatk_path} IntervalListTools \
       -ACTION OVERLAPS \
       -O all.sorted.interval_list \
       -I all.interval_list \
@@ -1038,7 +1064,7 @@ task GetFingerprintingIntervalIndices {
   runtime {
     cpu: 2
     memory: "3.75 GiB"
-    preemptible: 1
+    preemptible: preemptible_tries
     disks: "local-disk 10 HDD"
     docker: gatk_docker
   }
