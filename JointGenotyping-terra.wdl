@@ -159,7 +159,10 @@ workflow JointGenotyping {
       ref_fasta_index = ref_fasta_index,
       ref_dict = ref_dict,
       disk_size = small_disk,
-      sample_names_unique_done = CheckSamplesUnique.samples_unique
+      sample_names_unique_done = CheckSamplesUnique.samples_unique,
+      gatk_docker = gatk_docker,
+      gatk_path = gatk_path,
+      preemptible_tries = preemptible_tries
   }
 
   Array[File] unpadded_intervals = SplitIntervalList.output_intervals
@@ -212,6 +215,7 @@ workflow JointGenotyping {
             ref_fasta_index = ref_fasta_index,
             ref_dict = ref_dict,
             dbsnp_vcf = dbsnp_vcf,
+            preemptible_tries = preemptible_tries
         }
       }
 
@@ -221,7 +225,10 @@ workflow JointGenotyping {
         input:
           input_vcfs = gnarly_gvcfs,
           output_vcf_name = callset_name + "." + idx + ".gnarly.vcf.gz",
-          disk_size = large_disk
+          disk_size = large_disk,
+          gatk_docker = gatk_docker,
+          gatk_path = gatk_path,
+          preemptible_tries = preemptible_tries
       }
     }
 
@@ -467,7 +474,10 @@ workflow JointGenotyping {
       call Tasks.GetFingerprintingIntervalIndices {
         input:
           unpadded_intervals = unpadded_intervals,
-          haplotype_database = haplotype_database
+          haplotype_database = haplotype_database,
+          gatk_docker = gatk_docker,
+          gatk_path = gatk_path,
+          preemptible_tries = preemptible_tries
       }
 
       Array[Int] fingerprinting_indices = GetFingerprintingIntervalIndices.indices_to_fingerprint
@@ -480,7 +490,10 @@ workflow JointGenotyping {
         input:
           input_vcfs = vcfs_to_fingerprint,
           output_vcf_name = callset_name + ".gathered.fingerprinting.vcf.gz",
-          disk_size = medium_disk
+          disk_size = medium_disk,
+          gatk_docker = gatk_docker,
+          gatk_path = gatk_path,
+          preemptible_tries = preemptible_tries
       }
 
       call Tasks.SelectFingerprintSiteVariants {
@@ -488,7 +501,10 @@ workflow JointGenotyping {
           input_vcf = GatherFingerprintingVcfs.output_vcf,
           base_output_name = callset_name + ".fingerprinting",
           haplotype_database = haplotype_database,
-          disk_size = medium_disk
+          disk_size = medium_disk,
+          gatk_docker = gatk_docker,
+          gatk_path = gatk_path,
+          preemptible_tries = preemptible_tries
       }
 
       call Tasks.PartitionSampleNameMap {
@@ -534,7 +550,8 @@ workflow JointGenotyping {
           sample_name_map = sample_name_map,
           haplotype_database = haplotype_database,
           output_base_name = callset_name,
-          picard_docker = picard_docker
+          picard_docker = picard_docker,
+          preemptible_tries = preemptible_tries
       }
     }
 
