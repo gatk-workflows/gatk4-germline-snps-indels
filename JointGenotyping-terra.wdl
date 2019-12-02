@@ -45,7 +45,8 @@ version 1.0
 
 # WORKFLOW DEFINITION 
 
-import "./tasks/JointGenotypingTasks.wdl" as Tasks
+import "./tasks/JointGenotypingTasks-terra.wdl" as Tasks
+
 
 # Joint Genotyping for hg38 Whole Genomes and Exomes (has not been tested on hg19)
 workflow JointGenotyping {
@@ -64,11 +65,6 @@ workflow JointGenotyping {
 
     File dbsnp_vcf
     File dbsnp_vcf_index
-
-    Int small_disk
-    Int medium_disk
-    Int large_disk
-    Int huge_disk
 
     Array[String] snp_recalibration_tranche_values
     Array[String] snp_recalibration_annotation_values
@@ -90,6 +86,26 @@ workflow JointGenotyping {
     File axiomPoly_resource_vcf_index
     File dbsnp_resource_vcf = dbsnp_vcf
     File dbsnp_resource_vcf_index = dbsnp_vcf_index
+
+    # Runtime attributes
+    String? gatk_docker_override
+    String gatk_docker = select_first([gatk_docker_override, "broadinstitute/gatk:4.1.4.0"])
+    String? gatk_path_override
+    String gatk_path = select_first([gatk_path_override, "/gatk/gatk"])
+    String? picard_docker_override
+    String picard_docker = select_first([picard_docker_override, "us.gcr.io/broad-gotc-prod/gatk4-joint-genotyping:yf_fire_crosscheck_picard_with_nio_fast_fail_fast_sample_map"])
+
+    Int? small_disk_override
+    Int small_disk = select_first([small_disk_override, "100"])
+    Int? medium_disk_override
+    Int medium_disk = select_first([medium_disk_override, "200"])
+    Int? large_disk_override
+    Int large_disk = select_first([large_disk_override, "300"])
+    Int? huge_disk_override
+    Int huge_disk = select_first([huge_disk_override, "400"])
+
+    String? preemptible_tries_override
+    Int preemptible_tries = select_first([preemptible_tries_override, "3"])
 
     # ExcessHet is a phred-scaled p-value. We want a cutoff of anything more extreme
     # than a z-score of -4.5 which is a p-value of 3.4e-06, which phred-scaled is 54.69
@@ -161,7 +177,10 @@ workflow JointGenotyping {
         ref_dict = ref_dict,
         workspace_dir_name = "genomicsdb",
         disk_size = medium_disk,
-        batch_size = 50
+        batch_size = 50,
+        gatk_docker = gatk_docker,
+        gatk_path = gatk_path,
+        preemptible_tries = preemptible_tries
     }
 
     if (use_gnarly_genotyper) {
@@ -174,7 +193,10 @@ workflow JointGenotyping {
           ref_fasta_index = ref_fasta_index,
           ref_dict = ref_dict,
           disk_size = small_disk,
-          sample_names_unique_done = CheckSamplesUnique.samples_unique
+          sample_names_unique_done = CheckSamplesUnique.samples_unique,
+          gatk_docker = gatk_docker,
+          gatk_path = gatk_path,
+          preemptible_tries = preemptible_tries
       }
 
       Array[File] gnarly_intervals = GnarlyIntervalScatterDude.output_intervals
@@ -212,7 +234,10 @@ workflow JointGenotyping {
           ref_fasta_index = ref_fasta_index,
           ref_dict = ref_dict,
           dbsnp_vcf = dbsnp_vcf,
-          disk_size = medium_disk
+          disk_size = medium_disk,
+          gatk_docker = gatk_docker,
+          gatk_path = gatk_path,
+          preemptible_tries = preemptible_tries
       }
     }
 
@@ -226,7 +251,10 @@ workflow JointGenotyping {
         excess_het_threshold = excess_het_threshold,
         variant_filtered_vcf_filename = callset_name + "." + idx + ".variant_filtered.vcf.gz",
         sites_only_vcf_filename = callset_name + "." + idx + ".sites_only.variant_filtered.vcf.gz",
-        disk_size = medium_disk
+        disk_size = medium_disk,
+        gatk_docker = gatk_docker,
+        gatk_path = gatk_path,
+        preemptible_tries = preemptible_tries
     }
   }
 
@@ -234,7 +262,10 @@ workflow JointGenotyping {
     input:
       input_vcfs = HardFilterAndMakeSitesOnlyVcf.sites_only_vcf,
       output_vcf_name = callset_name + ".sites_only.vcf.gz",
-      disk_size = medium_disk
+      disk_size = medium_disk,
+      gatk_docker = gatk_docker,
+      gatk_path = gatk_path,
+      preemptible_tries = preemptible_tries
   }
 
   call Tasks.IndelsVariantRecalibrator {
@@ -252,7 +283,10 @@ workflow JointGenotyping {
       dbsnp_resource_vcf = dbsnp_resource_vcf,
       dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
       use_allele_specific_annotations = allele_specific_annotations,
-      disk_size = small_disk
+      disk_size = small_disk,
+      gatk_docker = gatk_docker,
+      gatk_path = gatk_path,
+      preemptible_tries = preemptible_tries
   }
 
   if (num_gvcfs > snps_variant_recalibration_threshold) {
@@ -275,7 +309,10 @@ workflow JointGenotyping {
         dbsnp_resource_vcf = dbsnp_resource_vcf,
         dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
         use_allele_specific_annotations = allele_specific_annotations,
-        disk_size = small_disk
+        disk_size = small_disk,
+        gatk_docker = gatk_docker,
+        gatk_path = gatk_path,
+        preemptible_tries = preemptible_tries
     }
 
     scatter (idx in range(length(HardFilterAndMakeSitesOnlyVcf.sites_only_vcf))) {
@@ -297,7 +334,10 @@ workflow JointGenotyping {
           dbsnp_resource_vcf = dbsnp_resource_vcf,
           dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
           use_allele_specific_annotations = allele_specific_annotations,
-          disk_size = small_disk
+          disk_size = small_disk,
+          gatk_docker = gatk_docker,
+          gatk_path = gatk_path,
+          preemptible_tries = preemptible_tries
         }
     }
 
@@ -305,7 +345,10 @@ workflow JointGenotyping {
       input:
         tranches = SNPsVariantRecalibratorScattered.tranches,
         output_filename = callset_name + ".snps.gathered.tranches",
-        disk_size = small_disk
+        disk_size = small_disk,
+        gatk_docker = gatk_docker,
+        gatk_path = gatk_path,
+        preemptible_tries = preemptible_tries
     }
   }
 
@@ -327,7 +370,10 @@ workflow JointGenotyping {
         dbsnp_resource_vcf = dbsnp_resource_vcf,
         dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
         use_allele_specific_annotations = allele_specific_annotations,
-        disk_size = small_disk
+        disk_size = small_disk,
+        gatk_docker = gatk_docker,
+        gatk_path = gatk_path,
+        preemptible_tries = preemptible_tries
     }
   }
 
@@ -347,7 +393,10 @@ workflow JointGenotyping {
         indel_filter_level = indel_filter_level,
         snp_filter_level = snp_filter_level,
         use_allele_specific_annotations = allele_specific_annotations,
-        disk_size = medium_disk
+        disk_size = medium_disk,
+        gatk_docker = gatk_docker,
+        gatk_path = gatk_path,
+        preemptible_tries = preemptible_tries
     }
 
     # For large callsets we need to collect metrics from the shards and gather them later.
@@ -361,7 +410,10 @@ workflow JointGenotyping {
           dbsnp_vcf_index = dbsnp_vcf_index,
           interval_list = eval_interval_list,
           ref_dict = ref_dict,
-          disk_size = medium_disk
+          disk_size = medium_disk,
+          gatk_docker = gatk_docker,
+          gatk_path = gatk_path,
+          preemptible_tries = preemptible_tries
       }
     }
   }
@@ -372,7 +424,10 @@ workflow JointGenotyping {
       input:
         input_vcfs = ApplyRecalibration.recalibrated_vcf,
         output_vcf_name = callset_name + ".vcf.gz",
-        disk_size = huge_disk
+        disk_size = huge_disk,
+        gatk_docker = gatk_docker,
+        gatk_path = gatk_path,
+        preemptible_tries = preemptible_tries
     }
 
     call Tasks.CollectVariantCallingMetrics as CollectMetricsOnFullVcf {
@@ -384,7 +439,10 @@ workflow JointGenotyping {
         dbsnp_vcf_index = dbsnp_vcf_index,
         interval_list = eval_interval_list,
         ref_dict = ref_dict,
-        disk_size = large_disk
+        disk_size = large_disk,
+        gatk_docker = gatk_docker,
+        gatk_path = gatk_path,
+        preemptible_tries = preemptible_tries
     }
   }
 
@@ -395,7 +453,10 @@ workflow JointGenotyping {
         input_details = select_all(CollectMetricsSharded.detail_metrics_file),
         input_summaries = select_all(CollectMetricsSharded.summary_metrics_file),
         output_prefix = callset_name,
-        disk_size = medium_disk
+        disk_size = medium_disk,
+        gatk_docker = gatk_docker,
+        gatk_path = gatk_path,
+        preemptible_tries = preemptible_tries
     }
   }
 
@@ -446,7 +507,8 @@ workflow JointGenotyping {
             sample_name_map = sample_name_map,
             haplotype_database = haplotype_database,
             output_base_name = callset_name + "." + idx,
-            scattered = true
+            scattered = true,
+            picard_docker = picard_docker
         }
       }
 
@@ -470,7 +532,8 @@ workflow JointGenotyping {
           vcf_paths = ApplyRecalibration.recalibrated_vcf,
           sample_name_map = sample_name_map,
           haplotype_database = haplotype_database,
-          output_base_name = callset_name
+          output_base_name = callset_name,
+          picard_docker = picard_docker
       }
     }
 
