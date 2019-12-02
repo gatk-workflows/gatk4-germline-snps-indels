@@ -525,7 +525,8 @@ workflow JointGenotyping {
             haplotype_database = haplotype_database,
             output_base_name = callset_name + "." + idx,
             scattered = true,
-            picard_docker = picard_docker
+            picard_docker = picard_docker,
+            preemptible_tries = preemptible_tries
         }
       }
 
