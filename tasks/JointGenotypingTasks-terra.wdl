@@ -4,6 +4,7 @@ version 1.0
 task CheckSamplesUnique {
   input {
     File sample_name_map
+    Int sample_num_threshold = 50
   }
 
   command {
@@ -12,10 +13,10 @@ task CheckSamplesUnique {
     then
       echo "Samples in the sample_name_map are not unique" 1>&2
       exit 1
-    elif [[ $(cut -f 1 ~{sample_name_map} | wc -l) -lt 50 ]]
+    elif [[ $(cut -f 1 ~{sample_name_map} | wc -l) -lt ~{sample_num_threshold} ]]
     then
-      echo "There are less than 50 samples in the sample_name_map" 1>&2
-      echo "Having less than 50 samples means there likely isn't enough data to complete joint calling" 1>&2
+      echo "There are fewer than ~{sample_num_threshold} samples in the sample_name_map" 1>&2
+      echo "Having fewer than ~{sample_num_threshold} samples means there likely isn't enough data to complete joint calling" 1>&2
       exit 1
     else
       echo true
@@ -146,6 +147,8 @@ task GenotypeGVCFs {
     String dbsnp_vcf
 
     Int disk_size
+    # This is needed for gVCFs generated with GATK3 HaplotypeCaller
+    Boolean allow_old_rms_mapping_quality_annotation_data = false
     String gatk_docker = "us.gcr.io/broad-gatk/gatk:4.1.4.0"
   }
 
@@ -171,6 +174,7 @@ task GenotypeGVCFs {
       --use-new-qual-calculator \
       -V gendb://$WORKSPACE \
       -L ~{interval} \
+      ~{true='--allow-old-rms-mapping-quality-annotation-data' false='' allow_old_rms_mapping_quality_annotation_data} \
       --merge-input-intervals
   >>>
 

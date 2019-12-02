@@ -47,11 +47,10 @@ version 1.0
 
 import "./tasks/JointGenotypingTasks.wdl" as Tasks
 
-
 # Joint Genotyping for hg38 Whole Genomes and Exomes (has not been tested on hg19)
 workflow JointGenotyping {
 
-  String pipeline_version = "1.1"
+  String pipeline_version = "1.2"
 
   input {
     File unpadded_intervals_file
@@ -106,9 +105,12 @@ workflow JointGenotyping {
     Float unbounded_scatter_count_scale_factor = 0.15
     Int gnarly_scatter_count = 10
     Boolean use_gnarly_genotyper = false
+    Boolean use_allele_specific_annotations = true
     Boolean cross_check_fingerprints = true
     Boolean scatter_cross_check_fingerprints = false
   }
+
+  Boolean allele_specific_annotations = !use_gnarly_genotyper && use_allele_specific_annotations
 
   Array[Array[String]] sample_name_map_lines = read_tsv(sample_name_map)
   Int num_gvcfs = length(sample_name_map_lines)
@@ -249,7 +251,7 @@ workflow JointGenotyping {
       axiomPoly_resource_vcf_index = axiomPoly_resource_vcf_index,
       dbsnp_resource_vcf = dbsnp_resource_vcf,
       dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
-      use_allele_specific_annotations = !use_gnarly_genotyper,
+      use_allele_specific_annotations = allele_specific_annotations,
       disk_size = small_disk
   }
 
@@ -272,7 +274,7 @@ workflow JointGenotyping {
         one_thousand_genomes_resource_vcf_index = one_thousand_genomes_resource_vcf_index,
         dbsnp_resource_vcf = dbsnp_resource_vcf,
         dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
-        use_allele_specific_annotations = !use_gnarly_genotyper,
+        use_allele_specific_annotations = allele_specific_annotations,
         disk_size = small_disk
     }
 
@@ -294,7 +296,7 @@ workflow JointGenotyping {
           one_thousand_genomes_resource_vcf_index = one_thousand_genomes_resource_vcf_index,
           dbsnp_resource_vcf = dbsnp_resource_vcf,
           dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
-          use_allele_specific_annotations = !use_gnarly_genotyper,
+          use_allele_specific_annotations = allele_specific_annotations,
           disk_size = small_disk
         }
     }
@@ -324,7 +326,7 @@ workflow JointGenotyping {
         one_thousand_genomes_resource_vcf_index = one_thousand_genomes_resource_vcf_index,
         dbsnp_resource_vcf = dbsnp_resource_vcf,
         dbsnp_resource_vcf_index = dbsnp_resource_vcf_index,
-        use_allele_specific_annotations = !use_gnarly_genotyper,
+        use_allele_specific_annotations = allele_specific_annotations,
         disk_size = small_disk
     }
   }
@@ -344,7 +346,7 @@ workflow JointGenotyping {
         snps_tranches = select_first([SNPGatherTranches.tranches, SNPsVariantRecalibratorClassic.tranches]),
         indel_filter_level = indel_filter_level,
         snp_filter_level = snp_filter_level,
-        use_allele_specific_annotations = !use_gnarly_genotyper,
+        use_allele_specific_annotations = allele_specific_annotations,
         disk_size = medium_disk
     }
 

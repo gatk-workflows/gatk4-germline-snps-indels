@@ -1,6 +1,6 @@
 {
-  "JointGenotyping.sample_name_map": "gs://gatk-test-data/joint_discovery/NA12878.sample_map",
-  "JointGenotyping.callset_name": "NA12878",
+  "JointGenotyping.sample_name_map": "gs://gatk-test-data/joint_discovery/1kg_50_hg38/gvcf/hg38_1kg_50.sample_map",
+  "JointGenotyping.callset_name": "hg38_1kg_50",
   "JointGenotyping.unbounded_scatter_count_scale_factor": 2.5,
   "JointGenotyping.SplitIntervalList.scatter_mode": "INTERVAL_SUBDIVISION",
 
