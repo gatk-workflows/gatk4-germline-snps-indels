@@ -875,7 +875,7 @@ task CrossCheckFingerprint {
   String output_name = output_base_name + ".fingerprintcheck"
 
   command <<<
-    set -euo pipefail
+    set -eu
 
     gvcfInputsList=~{write_lines(gvcf_paths)}
     vcfInputsList=~{write_lines(vcf_paths)}
