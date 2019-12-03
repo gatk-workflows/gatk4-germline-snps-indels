@@ -4,6 +4,7 @@ version 1.0
 task CheckSamplesUnique {
   input {
     File sample_name_map
+    Int sample_num_threshold = 50
   }
 
   command {
@@ -12,10 +13,10 @@ task CheckSamplesUnique {
     then
       echo "Samples in the sample_name_map are not unique" 1>&2
       exit 1
-    elif [[ $(cut -f 1 ~{sample_name_map} | wc -l) -lt 50 ]]
+    elif [[ $(cut -f 1 ~{sample_name_map} | wc -l) -lt ~{sample_num_threshold} ]]
     then
-      echo "There are less than 50 samples in the sample_name_map" 1>&2
-      echo "Having less than 50 samples means there likely isn't enough data to complete joint calling" 1>&2
+      echo "There are fewer than ~{sample_num_threshold} samples in the sample_name_map" 1>&2
+      echo "Having fewer than ~{sample_num_threshold} samples means there likely isn't enough data to complete joint calling" 1>&2
       exit 1
     else
       echo true
@@ -90,7 +91,7 @@ task ImportGVCFs {
 
     # Using a nightly version of GATK containing fixes for GenomicsDB
     # https://github.com/broadinstitute/gatk/pull/5899
-    String gatk_docker
+    String gatk_docker = "us.gcr.io/broad-gotc-prod/gatk-nightly:2019-05-07-4.1.2.0-5-g53d015e4f-NIGHTLY-SNAPSHOT"
     String gatk_path
     String preemptible_tries
   }
@@ -150,6 +151,8 @@ task GenotypeGVCFs {
     String dbsnp_vcf
 
     Int disk_size
+    # This is needed for gVCFs generated with GATK3 HaplotypeCaller
+    Boolean allow_old_rms_mapping_quality_annotation_data = false
     String gatk_docker
     String gatk_path
     String preemptible_tries
@@ -177,6 +180,7 @@ task GenotypeGVCFs {
       --use-new-qual-calculator \
       -V gendb://$WORKSPACE \
       -L ~{interval} \
+      ~{true='--allow-old-rms-mapping-quality-annotation-data' false='' allow_old_rms_mapping_quality_annotation_data} \
       --merge-input-intervals
   >>>
 
@@ -530,7 +534,7 @@ task GatherTranches {
     Array[File] tranches
     String output_filename
     Int disk_size
-    String gatk_docker 
+    String gatk_docker = "us.gcr.io/broad-gotc-prod/gatk4-joint-genotyping:1.3.0-1527875152"
     String gatk_path
     String preemptible_tries
   }
@@ -568,7 +572,7 @@ task GatherTranches {
 
     cat $tranches_fofn | rev | cut -d '/' -f 1 | rev | awk '{print "tranches/" $1}' > inputs.list
 
-    ~{gatk_path} --java-options -Xms6g \
+    /usr/gitc/gatk --java-options -Xms6g \
       GatherTranches \
       --input inputs.list \
       --output ~{output_filename}
@@ -794,7 +798,7 @@ task GatherVariantCallingMetrics {
     Array[File] input_summaries
     String output_prefix
     Int disk_size
-    String gatk_docker
+    String gatk_docker = "us.gcr.io/broad-gotc-prod/gatk4-joint-genotyping:1.3.0-1527875152"
     String gatk_path
     String preemptible_tries
   }
@@ -846,7 +850,7 @@ task GatherVariantCallingMetrics {
 
     INPUT=$(cat $input_details_fofn | rev | cut -d '/' -f 1 | rev | sed s/.variant_calling_detail_metrics//g | awk '{printf("--INPUT metrics/%s ", $1)}')
 
-    ~{gatk_path} --java-options -Xms2g \
+    /usr/gitc/gatk --java-options -Xms2g \
       AccumulateVariantCallingMetrics \
       $INPUT \
       --OUTPUT ~{output_prefix}
