@@ -38,18 +38,13 @@ workflow HaplotypeCallerGvcf_GATK4 {
     File ref_fasta_index
     File scattered_calling_intervals_list
   
-    Boolean? make_gvcf
-    Boolean making_gvcf = select_first([make_gvcf,true])
+    Boolean make_gvcf = true
+    String gatk_docker = "broadinstitute/gatk:4.1.4.0"
+    String gatk_path = "/gatk/gatk"
+    String gitc_docker = "broadinstitute/genomes-in-the-cloud:2.3.1-1500064817"
+    String samtools_path = "samtools"
+  }  
 
-    String? gatk_docker_override
-    String gatk_docker = select_first([gatk_docker_override, "broadinstitute/gatk:4.1.4.0"])
-    String? gatk_path_override
-    String gatk_path = select_first([gatk_path_override, "/gatk/gatk"])
-    String? gitc_docker_override
-    String gitc_docker = select_first([gitc_docker_override, "broadinstitute/genomes-in-the-cloud:2.3.1-1500064817"])
-    String? samtools_path_override
-    String samtools_path = select_first([samtools_path_override, "samtools"])
- 
     Array[File] scattered_calling_intervals = read_lines(scattered_calling_intervals_list)
 
     #is the input a cram file?
@@ -57,7 +52,7 @@ workflow HaplotypeCallerGvcf_GATK4 {
 
     String sample_basename = if is_cram then  basename(input_bam, ".cram") else basename(input_bam, ".bam")
     String vcf_basename = sample_basename
-    String output_suffix = if making_gvcf then ".g.vcf.gz" else ".vcf.gz"
+    String output_suffix = if make_gvcf then ".g.vcf.gz" else ".vcf.gz"
     String output_filename = vcf_basename + output_suffix
 
     # We need disk to localize the sharded input and output due to the scatter for HaplotypeCaller.
@@ -65,7 +60,6 @@ workflow HaplotypeCallerGvcf_GATK4 {
     # to account for the fact that the data is quite uneven across the shards.
     Int potential_hc_divisor = length(scattered_calling_intervals) - 20
     Int hc_divisor = if potential_hc_divisor > 1 then potential_hc_divisor else 1
-  }
 
   if ( is_cram ) {
     call CramToBamTask {
@@ -94,7 +88,7 @@ workflow HaplotypeCallerGvcf_GATK4 {
         ref_fasta = ref_fasta,
         ref_fasta_index = ref_fasta_index,
         hc_scatter = hc_divisor,
-        make_gvcf = making_gvcf,
+        make_gvcf = make_gvcf,
         docker = gatk_docker,
         gatk_path = gatk_path
     }
@@ -241,9 +235,9 @@ task MergeGVCFs {
     String docker
     Int? mem_gb
     Int? disk_space_gb
-    Boolean use_ssd = false
     Int? preemptible_attempts
   }
+    Boolean use_ssd = false
     Int machine_mem_gb = select_first([mem_gb, 3])
     Int command_mem_gb = machine_mem_gb - 1
   

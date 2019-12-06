@@ -89,24 +89,16 @@ workflow JointGenotyping {
     File dbsnp_resource_vcf_index = dbsnp_vcf_index
 
     # Runtime attributes
-    String? gatk_docker_override
-    String gatk_docker = select_first([gatk_docker_override, "broadinstitute/gatk:4.1.4.0"])
-    String? gatk_path_override
-    String gatk_path = select_first([gatk_path_override, "/gatk/gatk"])
-    String? picard_docker_override
-    String picard_docker = select_first([picard_docker_override, "us.gcr.io/broad-gotc-prod/gatk4-joint-genotyping:yf_fire_crosscheck_picard_with_nio_fast_fail_fast_sample_map"])
+    String gatk_docker = "broadinstitute/gatk:4.1.4.0"
+    String gatk_path = "/gatk/gatk"
+    String picard_docker = "us.gcr.io/broad-gotc-prod/gatk4-joint-genotyping:yf_fire_crosscheck_picard_with_nio_fast_fail_fast_sample_map"
 
-    Int? small_disk_override
-    Int small_disk = select_first([small_disk_override, "100"])
-    Int? medium_disk_override
-    Int medium_disk = select_first([medium_disk_override, "200"])
-    Int? large_disk_override
-    Int large_disk = select_first([large_disk_override, "300"])
-    Int? huge_disk_override
-    Int huge_disk = select_first([huge_disk_override, "400"])
+    Int small_disk = 100
+    Int medium_disk = 200
+    Int large_disk = 300
+    Int huge_disk = 400
 
-    String? preemptible_tries_override
-    Int preemptible_tries = select_first([preemptible_tries_override, "3"])
+    Int preemptible_tries = 3
 
     # ExcessHet is a phred-scaled p-value. We want a cutoff of anything more extreme
     # than a z-score of -4.5 which is a p-value of 3.4e-06, which phred-scaled is 54.69
