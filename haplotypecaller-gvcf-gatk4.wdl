@@ -138,10 +138,10 @@ task CramToBamTask {
     set -e
     set -o pipefail
 
-    ${samtools_path} view -h -T ${ref_fasta} ${input_cram} |
-    ${samtools_path} view -b -o ${sample_name}.bam -
-    ${samtools_path} index -b ${sample_name}.bam
-    mv ${sample_name}.bam.bai ${sample_name}.bai
+    ~{samtools_path} view -h -T ~{ref_fasta} ~{input_cram} |
+    ~{samtools_path} view -b -o ~{sample_name}.bam -
+    ~{samtools_path} index -b ~{sample_name}.bam
+    mv ~{sample_name}.bam.bai ~{sample_name}.bai
   }
   runtime {
     docker: docker
@@ -150,8 +150,8 @@ task CramToBamTask {
     preemptible: select_first([preemptible_attempts, 3])
  }
   output {
-    File output_bam = "${sample_name}.bam"
-    File output_bai = "${sample_name}.bai"
+    File output_bam = "~{sample_name}.bam"
+    File output_bai = "~{sample_name}.bai"
   }
 }
 
@@ -202,13 +202,13 @@ task HaplotypeCaller {
   command {
     set -e
   
-    ${gatk_path} --java-options "-Xmx${command_mem_gb}G ${java_opt}" \
+    ~{gatk_path} --java-options "-Xmx~{command_mem_gb}G ~{java_opt}" \
       HaplotypeCaller \
-      -R ${ref_fasta} \
-      -I ${input_bam} \
-      -L ${interval_list} \
-      -O ${output_filename} \
-      -contamination ${default=0 contamination} ${true="-ERC GVCF" false="" make_gvcf}
+      -R ~{ref_fasta} \
+      -I ~{input_bam} \
+      -L ~{interval_list} \
+      -O ~{output_filename} \
+      -contamination ~{default=0 contamination} ~{true="-ERC GVCF" false="" make_gvcf}
   }
   runtime {
     docker: docker
@@ -217,8 +217,8 @@ task HaplotypeCaller {
     preemptible: select_first([preemptible_attempts, 3])
   }
   output {
-    File output_vcf = "${output_filename}"
-    File output_vcf_index = "${output_filename}.tbi"
+    File output_vcf = "~{output_filename}"
+    File output_vcf_index = "~{output_filename}.tbi"
   }
 }
 # Merge GVCFs generated per-interval for the same sample
@@ -244,10 +244,10 @@ task MergeGVCFs {
   command {
   set -e
 
-    ${gatk_path} --java-options "-Xmx${command_mem_gb}G"  \
+    ~{gatk_path} --java-options "-Xmx~{command_mem_gb}G"  \
       MergeVcfs \
-      --INPUT ${sep=' --INPUT ' input_vcfs} \
-      --OUTPUT ${output_filename}
+      --INPUT ~{sep=' --INPUT ' input_vcfs} \
+      --OUTPUT ~{output_filename}
   }
   runtime {
     docker: docker
@@ -256,8 +256,8 @@ task MergeGVCFs {
     preemptible: select_first([preemptible_attempts, 3])
   }
   output {
-    File output_vcf = "${output_filename}"
-    File output_vcf_index = "${output_filename}.tbi"
+    File output_vcf = "~{output_filename}"
+    File output_vcf_index = "~{output_filename}.tbi"
   }
 }
 
