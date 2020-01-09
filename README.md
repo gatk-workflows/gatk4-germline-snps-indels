@@ -33,7 +33,7 @@ file with 50 or more GVCFs and produces a multisample VCF.
 original workflow to support users interested in running the 
 workflow on Terra. The changes include variables for dockers and disksize, making 
 it easier to configure the workflow.*
-*- Creating a sample map can be nusience on Terra, use the [generate-sample-map](https://portal.firecloud.org/?return=terra#methods/gatk/generate-sample-map/1) to create one for you.*
+*- Creating a sample map can be nuisance on Terra, use the [generate-sample-map](https://portal.firecloud.org/?return=terra#methods/gatk/generate-sample-map/1) to create one for you.*
 
 
 #### Requirements/expectations
