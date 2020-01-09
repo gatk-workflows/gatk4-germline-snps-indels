@@ -25,7 +25,7 @@ setting the `make_gvcf` input variable to `false`.
 ### JointGenotyping.wdl :
 This WDL implements the joint calling and VQSR filtering portion of the 
 GATK Best Practices for germline SNP and Indel discovery 
-in human whole-genome sequencing (WGS). The workflow accept a sample map 
+in human whole-genome sequencing (WGS). The workflow requires a sample map 
 file with 50 or more GVCFs and produces a multisample VCF.
 
 *NOTE:*  
@@ -33,6 +33,7 @@ file with 50 or more GVCFs and produces a multisample VCF.
 original workflow to support users interested in running the 
 workflow on Terra. The changes include variables for dockers and disksize, making 
 it easier to configure the workflow.*
+*- Creating a sample map can be nusience on Terra, use the [generate-sample-map](https://portal.firecloud.org/?return=terra#methods/gatk/generate-sample-map/1) to create one for you.*
 
 
 #### Requirements/expectations
@@ -90,7 +91,7 @@ it easier to configure the workflow.*
     but the data will still be in the VCF in one giant INFO field
 - JointGenotyping output is divided into lots of shards
   - desirable for use in [Hail](https://hail.is/), which supports parallel import
-  - Its possible to use [GatherVcfs](https://gatk.broadinstitute.org/hc/en-us/search?utf8=%E2%9C%93&query=GatherVcfs) to combine shards per chromosome.
+  - Its possible to use [GatherVcfs](https://gatk.broadinstitute.org/hc/en-us/search?utf8=%E2%9C%93&query=GatherVcfs) to combine shards.
 - GnarlyGenotyper uses a QUAL score approximation
   - dramatically improves performance compared with GenotypeGVCFs, but QUAL output (and thus 
     the QD annotation) may be slightly discordant between the two tools
