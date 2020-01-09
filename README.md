@@ -81,6 +81,19 @@ it easier to configure the workflow.*
   The dynamic scatter interval creating was optimized for genomes.  The scattered SNP 
   VariantRecalibration may fail because of two few "bad" variants to build the negative model. 
   Also, apologies that the logging for SNP recalibration is overly verbose.
+- No allele subsetting for the JointGenotyping workflow
+  - for large cohorts, even exome callsets can have more than 1000 alleles at low 
+    complexity/STR sites
+  - for sites with more than 6 alternate alleles (by default) called genotypes will be returned, 
+    but without the PLs since the PL arrays get enormous
+  - allele-specific filtering could be performed if AS annotations are present, 
+    but the data will still be in the VCF in one giant INFO field
+- JointGenotyping output is divided into lots of shards
+  - desirable for use in [Hail](https://hail.is/), which supports parallel import
+  - Its possible to use [GatherVcfs](https://gatk.broadinstitute.org/hc/en-us/search?utf8=%E2%9C%93&query=GatherVcfs) to combine shards per chromosome.
+- GnarlyGenotyper uses a QUAL score approximation
+  - dramatically improves performance compared with GenotypeGVCFs, but QUAL output (and thus 
+    the QD annotation) may be slightly discordant between the two tools
 - The provided JSON is meant to be a ready to use example JSON template of the workflow. It is the user’s responsibility to correctly set the reference and resource input variables using the [GATK Tool and Tutorial Documentations](https://software.broadinstitute.org/gatk/documentation/).
 - Relevant reference and resources bundles can be accessed in [Resource Bundle](https://software.broadinstitute.org/gatk/download/bundle).
 - Runtime parameters are optimized for Broad's Google Cloud Platform implementation.
