@@ -208,7 +208,8 @@ task HaplotypeCaller {
       -I ~{input_bam} \
       -L ~{interval_list} \
       -O ~{output_filename} \
-      -contamination ~{default=0 contamination} ~{true="-ERC GVCF" false="" make_gvcf}
+      -contamination ~{default=0 contamination} ~{true="-ERC GVCF" false="" make_gvcf} \
+      -G StandardAnnotation -G AS_StandardAnnotation -G StandardHCAnnotation
   }
   runtime {
     docker: docker
