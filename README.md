@@ -4,11 +4,16 @@
 Workflows for [germline short variant discovery](https://software.broadinstitute.org/gatk/best-practices/workflow?id=11145) with GATK4. 
 
 ### haplotypecaller-gvcf-gatk :
-The haplotypecaller-gvcf-gatk4 workflow runs the HaplotypeCaller tool
-from GATK4 in GVCF mode on a single sample according to GATK Best Practices. 
-When executed the workflow scatters the HaplotypeCaller tool over a sample 
-using an intervals list file. The output file produced will be a 
-single gvcf file which can be used by the joint-discovery workflow.
+The haplotypecaller-gvcf-gatk4 workflow runs the GATK4 HaplotypeCaller tool
+in GVCF mode on a single sample according to GATK Best Practices. When 
+executed the workflow scatters the HaplotypeCaller tool over the input bam sample 
+using an interval list file. The output produced by the workflow will be a single GVCF 
+file which can then be provided to the JointGenotyping workflow along with several other 
+GVCF files to call for variants simultaneously, producing a multisample VCF. 
+The haplotypecaller-gvcf-gatk4 workflows default GVCF mode is useful when calling variants 
+for several samples efficiently. However, for instances when calling variants for one or a 
+few samples it is possible to have the workflow directly call variants and output a VCF file by 
+setting the `make_gvcf` input variable to `false`. 
 
 #### Requirements/expectations
 - One analysis-ready BAM file for a single sample (as identified in RG:SM)
@@ -17,22 +22,23 @@ single gvcf file which can be used by the joint-discovery workflow.
 #### Outputs 
 - One GVCF file and its index
 
-### joint-discovery-gatk :
+### JointGenotyping.wdl :
 This WDL implements the joint calling and VQSR filtering portion of the 
 GATK Best Practices for germline SNP and Indel discovery 
-in human whole-genome sequencing (WGS).
+in human whole-genome sequencing (WGS). The workflow requires a sample map 
+file with 50 or more GVCFs and produces a multisample VCF.
 
 *NOTE:*  
-*- joint-discovery-gatk4-local.wdl is a slightly modified version of the 
-original to support users interested in running the workflow locally.*  
-*- joint-discovery-gatk4-fc.wdl is a slightly modified version of the 
-original to support users interested in running the workflow firecloud with and
-using an array of gvcfs as input.*
+*- JointGenotyping-terra.wdl is a slightly modified version of the 
+original workflow to support users interested in running the 
+workflow on Terra. The changes include variables for dockers and disksize, making 
+it easier to configure the workflow.*
+*- Creating a sample map can be nuisance on Terra, use the [generate-sample-map](https://portal.firecloud.org/?return=terra#methods/gatk/generate-sample-map/1) to create one for you.*
 
 
 #### Requirements/expectations
 - One or more GVCFs produced by HaplotypeCaller in GVCF mode
-- Bare minimum 1 WGS sample or 30 Exome samples. Gene panels are not supported.
+- Bare minimum 50 samples. Gene panels are not supported.
 - When determining disk size in the JSON, use the guideline below
   - small_disk = (num_gvcfs / 10) + 10
   - medium_disk = (num_gvcfs * 15) + 10
@@ -45,7 +51,7 @@ using an array of gvcfs as input.*
   in the FILTER field.
 
 ### Software version requirements :
-- GATK 4.1 
+- GATK 4.1.4.0 
 - Samtools 1.3.1
 - Python 2.7
 - Cromwell version support 
@@ -76,6 +82,19 @@ using an array of gvcfs as input.*
   The dynamic scatter interval creating was optimized for genomes.  The scattered SNP 
   VariantRecalibration may fail because of two few "bad" variants to build the negative model. 
   Also, apologies that the logging for SNP recalibration is overly verbose.
+- No allele subsetting for the JointGenotyping workflow
+  - for large cohorts, even exome callsets can have more than 1000 alleles at low 
+    complexity/STR sites
+  - for sites with more than 6 alternate alleles (by default) called genotypes will be returned, 
+    but without the PLs since the PL arrays get enormous
+  - allele-specific filtering could be performed if AS annotations are present, 
+    but the data will still be in the VCF in one giant INFO field
+- JointGenotyping output is divided into lots of shards
+  - desirable for use in [Hail](https://hail.is/), which supports parallel import
+  - Its possible to use [GatherVcfs](https://gatk.broadinstitute.org/hc/en-us/search?utf8=%E2%9C%93&query=GatherVcfs) to combine shards.
+- GnarlyGenotyper uses a QUAL score approximation
+  - dramatically improves performance compared with GenotypeGVCFs, but QUAL output (and thus 
+    the QD annotation) may be slightly discordant between the two tools
 - The provided JSON is meant to be a ready to use example JSON template of the workflow. It is the user’s responsibility to correctly set the reference and resource input variables using the [GATK Tool and Tutorial Documentations](https://software.broadinstitute.org/gatk/documentation/).
 - Relevant reference and resources bundles can be accessed in [Resource Bundle](https://software.broadinstitute.org/gatk/download/bundle).
 - Runtime parameters are optimized for Broad's Google Cloud Platform implementation.
