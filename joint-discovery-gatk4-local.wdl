@@ -670,10 +670,10 @@ task SNPsVariantRecalibrator {
       -mode SNP \
       ${"--input-model " + model_report + " --output-tranches-for-scatter "} \
       --max-gaussians 6 \
-      --resource:hapmap,known=false,training=true,truth=true,prior=15:${hapmap_resource_vcf} \
-      --resource:omni,known=false,training=true,truth=true,prior=12:${omni_resource_vcf} \
-      --resource:1000G,known=false,training=true,truth=false,prior=10:${one_thousand_genomes_resource_vcf} \
-      --resource:dbsnp,known=true,training=false,truth=false,prior=7:${dbsnp_resource_vcf}
+      --resource:hapmap,known=false,training=true,truth=true,prior=15 ${hapmap_resource_vcf} \
+      --resource:omni,known=false,training=true,truth=true,prior=12 ${omni_resource_vcf} \
+      --resource:1000G,known=false,training=true,truth=false,prior=10 ${one_thousand_genomes_resource_vcf} \
+      --resource:dbsnp,known=true,training=false,truth=false,prior=7 ${dbsnp_resource_vcf}
   }
   runtime {
     docker: docker
