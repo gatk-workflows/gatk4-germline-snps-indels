@@ -17,7 +17,7 @@
 "JointGenotyping.ref_fasta_index":"gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
 "JointGenotyping.ref_dict":"gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict",
 "JointGenotyping.mills_resource_vcf_index":"gs://gcp-public-data--broad-references/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz.tbi",
-"JointGenotyping.sample_name_map":"gs://gatk-test-data/joint_discovery/1kg_50_hg38/gvcf/hg38_1kg_50.sample_map",
+"JointGenotyping.sample_name_map":"gs://gatk-test-data/1kgp/downsampled_gvcf_hg38/hg38_1kg_50.sample_map",
 "JointGenotyping.indel_recalibration_tranche_values":"[100.0,99.95,99.9,99.5,99.0,97.0,96.0,95.0,94.0,93.5,93.0,92.0,91.0,90.0]",
 "JointGenotyping.omni_resource_vcf":"gs://gcp-public-data--broad-references/hg38/v0/1000G_omni2.5.hg38.vcf.gz",
 "JointGenotyping.mills_resource_vcf":"gs://gcp-public-data--broad-references/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz",
