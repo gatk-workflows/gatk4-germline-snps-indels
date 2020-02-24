@@ -92,8 +92,9 @@ it easier to configure the workflow.*
 - JointGenotyping output is divided into lots of shards
   - desirable for use in [Hail](https://hail.is/), which supports parallel import
   - Its possible to use [GatherVcfs](https://gatk.broadinstitute.org/hc/en-us/search?utf8=%E2%9C%93&query=GatherVcfs) to combine shards.
+- Users working with large sample sets can invoke the GnarlyGenotyper task in the JointGenotyping.wdl workflow. However, the [ReblockGVCF](https://gatk.broadinstitute.org/hc/en-us/articles/360037593171-ReblockGVCF-BETA-) tool must be run for all GVCFs produced by HaplotypeCaller before they can be appropriately processed by GnarlyGenotyper. A workflow that applies the reblocking tool is provided here: [ReblockGVCF-gatk4_exomes_goodCompression](https://portal.firecloud.org/?return=terra#methods/methodsDev/ReblockGVCF-gatk4_exomes_goodCompression/4)
 - GnarlyGenotyper uses a QUAL score approximation
-  - dramatically improves performance compared with GenotypeGVCFs, but QUAL output (and thus 
+  - dramatically improves performance compared with GenotypeGVCFs, but QUAL output (and thus
     the QD annotation) may be slightly discordant between the two tools
 - The provided JSON is meant to be a ready to use example JSON template of the workflow. It is the user’s responsibility to correctly set the reference and resource input variables using the [GATK Tool and Tutorial Documentations](https://software.broadinstitute.org/gatk/documentation/).
 - Relevant reference and resources bundles can be accessed in [Resource Bundle](https://software.broadinstitute.org/gatk/download/bundle).
