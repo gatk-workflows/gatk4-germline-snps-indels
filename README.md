@@ -1,7 +1,7 @@
 # gatk4-germline-snps-indels
 
 ### Purpose : 
-Workflows for [germline short variant discovery](https://software.broadinstitute.org/gatk/best-practices/workflow?id=11145) with GATK4. 
+Workflows for [germline short variant discovery](https://gatk.broadinstitute.org/hc/en-us/articles/360035535932) with GATK4. 
 
 ### haplotypecaller-gvcf-gatk :
 The haplotypecaller-gvcf-gatk4 workflow runs the GATK4 HaplotypeCaller tool
@@ -96,13 +96,15 @@ it easier to configure the workflow.*
 - GnarlyGenotyper uses a QUAL score approximation
   - dramatically improves performance compared with GenotypeGVCFs, but QUAL output (and thus
     the QD annotation) may be slightly discordant between the two tools
-- The provided JSON is meant to be a ready to use example JSON template of the workflow. It is the user’s responsibility to correctly set the reference and resource input variables using the [GATK Tool and Tutorial Documentations](https://software.broadinstitute.org/gatk/documentation/).
-- Relevant reference and resources bundles can be accessed in [Resource Bundle](https://software.broadinstitute.org/gatk/download/bundle).
+- The provided JSON is a ready to use example JSON template of the workflow. It is the user’s responsibility to correctly set the reference and resource input variables using the [GATK Tool and Tutorial Documentations](https://gatk.broadinstitute.org/hc/en-us/categories/360002310591).
 - Runtime parameters are optimized for Broad's Google Cloud Platform implementation.
 - For help running workflows on the Google Cloud Platform or locally please
-view the following tutorial [(How to) Execute Workflows from the gatk-workflows Git Organization](https://software.broadinstitute.org/gatk/documentation/article?id=12521).
-- The following material is provided by the GATK Team. Please post any questions or concerns to one of our forum sites : [GATK](https://gatkforums.broadinstitute.org/gatk/categories/ask-the-team/) , [FireCloud](https://gatkforums.broadinstitute.org/firecloud/categories/ask-the-firecloud-team) or [Terra](https://broadinstitute.zendesk.com/hc/en-us/community/topics/360000500432-General-Discussion) , [WDL/Cromwell](https://gatkforums.broadinstitute.org/wdl/categories/ask-the-wdl-team).
-- Please visit the [User Guide](https://software.broadinstitute.org/gatk/documentation/) site for further documentation on our workflows and tools.
+view the following tutorial [(How to) Execute Workflows from the gatk-workflows Git Organization](https://gatk.broadinstitute.org/hc/en-us/articles/360035530952).
+- Please visit the [User Guide](https://gatk.broadinstitute.org/hc/en-us/categories/360002310591) site for further documentation on our workflows and tools.
+- Relevant reference and resources bundles can be accessed in [Resource Bundle](https://gatk.broadinstitute.org/hc/en-us/articles/360036212652).
+
+### Contact Us :
+- The following material is provided by the Data Science Platforum group at the Broad Institute. Please direct any questions or concerns to one of our forum sites : [GATK](https://gatk.broadinstitute.org/hc/en-us/community/topics) or [Terra](https://support.terra.bio/hc/en-us/community/topics/360000500432).
 
 ### LICENSING :
 Copyright Broad Institute, 2019 | BSD-3
