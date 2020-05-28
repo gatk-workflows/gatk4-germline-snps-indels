@@ -85,7 +85,6 @@ workflow HaplotypeCallerGvcf_GATK4 {
         input_bam_index = select_first([CramToBamTask.output_bai, input_bam_index]),
         interval_list = interval_file,
         output_filename = output_filename,
-        vcf_basename = vcf_basename,
         ref_dict = ref_dict,
         ref_fasta = ref_fasta,
         ref_fasta_index = ref_fasta_index,
@@ -166,7 +165,6 @@ task HaplotypeCaller {
     File input_bam_index
     File interval_list
     String output_filename
-    String vcf_basename
     File ref_dict
     File ref_fasta
     File ref_fasta_index
@@ -193,7 +191,8 @@ task HaplotypeCaller {
 
   Float ref_size = size(ref_fasta, "GB") + size(ref_fasta_index, "GB") + size(ref_dict, "GB")
   Int disk_size = ceil(((size(input_bam, "GB") + 30) / hc_scatter) + ref_size) + 20
-  
+
+  String vcf_basename = if make_gvcf then  basename(output_filename, ".gvcf") else basename(output_filename, ".vcf")
   String bamout_arg = if make_bamout then "-bamout ~{vcf_basename}.bamout.bam" else ""
 
   parameter_meta {
