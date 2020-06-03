@@ -39,10 +39,6 @@ it easier to configure the workflow.*
 #### Requirements/expectations
 - One or more GVCFs produced by HaplotypeCaller in GVCF mode
 - Bare minimum 50 samples. Gene panels are not supported.
-- When determining disk size in the JSON, use the guideline below
-  - small_disk = (num_gvcfs / 10) + 10
-  - medium_disk = (num_gvcfs * 15) + 10
-  - huge_disk = num_gvcfs + 10
 
 ### Outputs 
 - A VCF file and its index, filtered using variant quality score recalibration  
