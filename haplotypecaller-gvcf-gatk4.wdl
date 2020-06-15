@@ -39,7 +39,8 @@ workflow HaplotypeCallerGvcf_GATK4 {
     File scattered_calling_intervals_list
   
     Boolean make_gvcf = true
-    String gatk_docker = "broadinstitute/gatk:4.1.4.0"
+    Boolean make_bamout = false
+    String gatk_docker = "broadinstitute/gatk:4.1.7.0"
     String gatk_path = "/gatk/gatk"
     String gitc_docker = "broadinstitute/genomes-in-the-cloud:2.3.1-1500064817"
     String samtools_path = "samtools"
@@ -89,6 +90,7 @@ workflow HaplotypeCallerGvcf_GATK4 {
         ref_fasta_index = ref_fasta_index,
         hc_scatter = hc_divisor,
         make_gvcf = make_gvcf,
+        make_bamout = make_bamout,
         docker = gatk_docker,
         gatk_path = gatk_path
     }
@@ -168,6 +170,7 @@ task HaplotypeCaller {
     File ref_fasta_index
     Float? contamination
     Boolean make_gvcf
+    Boolean make_bamout
     Int hc_scatter
 
     String gatk_path
@@ -188,7 +191,10 @@ task HaplotypeCaller {
 
   Float ref_size = size(ref_fasta, "GB") + size(ref_fasta_index, "GB") + size(ref_dict, "GB")
   Int disk_size = ceil(((size(input_bam, "GB") + 30) / hc_scatter) + ref_size) + 20
-  
+
+  String vcf_basename = if make_gvcf then  basename(output_filename, ".gvcf") else basename(output_filename, ".vcf")
+  String bamout_arg = if make_bamout then "-bamout ~{vcf_basename}.bamout.bam" else ""
+
   parameter_meta {
     input_bam: {
       description: "a bam file",
@@ -208,8 +214,14 @@ task HaplotypeCaller {
       -I ~{input_bam} \
       -L ~{interval_list} \
       -O ~{output_filename} \
-      -contamination ~{default=0 contamination} ~{true="-ERC GVCF" false="" make_gvcf} \
-      -G StandardAnnotation -G AS_StandardAnnotation -G StandardHCAnnotation
+      -contamination ~{default=0 contamination} \
+      -G StandardAnnotation -G StandardHCAnnotation ~{true="-G AS_StandardAnnotation" false="" make_gvcf} \
+      -GQB 10 -GQB 20 -GQB 30 -GQB 40 -GQB 50 -GQB 60 -GQB 70 -GQB 80 -GQB 90 \
+      ~{true="-ERC GVCF" false="" make_gvcf} \
+      ~{bamout_arg}
+
+    # Cromwell doesn't like optional task outputs, so we have to touch this file.
+    touch ~{vcf_basename}.bamout.bam 
   }
   runtime {
     docker: docker
@@ -220,6 +232,7 @@ task HaplotypeCaller {
   output {
     File output_vcf = "~{output_filename}"
     File output_vcf_index = "~{output_filename}.tbi"
+    File bamout = "~{vcf_basename}.bamout.bam"
   }
 }
 # Merge GVCFs generated per-interval for the same sample
