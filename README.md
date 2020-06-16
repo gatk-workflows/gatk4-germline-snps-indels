@@ -33,8 +33,8 @@ file with 50 or more GVCFs and produces a multisample VCF.
 
 
 #### Requirements/expectations
-- A sample map listing one or more GVCFs produced by HaplotypeCaller in GVCF mode.
-- Bare minimum 50 samples. Gene panels are not supported.
+- A sample map listing 50 or more GVCFs produced by HaplotypeCaller in GVCF mode.
+- Gene panels are not supported.
 
 ### Outputs 
 - A VCF file and its index, filtered using variant quality score recalibration  
