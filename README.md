@@ -29,15 +29,11 @@ in human whole-genome sequencing (WGS). The workflow requires a sample map
 file with 50 or more GVCFs and produces a multisample VCF.
 
 *NOTE:*  
-*- JointGenotyping-terra.wdl is a slightly modified version of the 
-original workflow to support users interested in running the 
-workflow on Terra. The changes include variables for dockers and disksize, making 
-it easier to configure the workflow.*
-*- Creating a sample map can be nuisance on Terra, use the [generate-sample-map](https://portal.firecloud.org/?return=terra#methods/gatk/generate-sample-map/1) to create one for you.*
+*- To create a sample map use the [generate-sample-map](https://portal.firecloud.org/?return=terra#methods/gatk/generate-sample-map/1) workflow.*
 
 
 #### Requirements/expectations
-- One or more GVCFs produced by HaplotypeCaller in GVCF mode
+- A sample map listing one or more GVCFs produced by HaplotypeCaller in GVCF mode.
 - Bare minimum 50 samples. Gene panels are not supported.
 
 ### Outputs 
@@ -47,12 +43,11 @@ it easier to configure the workflow.*
   in the FILTER field.
 
 ### Software version requirements :
-- GATK 4.1.4.0 
+- GATK 4 
 - Samtools 1.3.1
 - Python 2.7
 - Cromwell version support 
-  - Successfully tested on v37
-  - Does not work on versions < v23 due to output syntax
+  - Successfully tested on v50
 
 ### IMPORTANT NOTE : 
 - VQSR wiring. The SNP and INDEL models are built in parallel, but then the corresponding 
