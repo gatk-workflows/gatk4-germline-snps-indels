@@ -173,6 +173,8 @@ task HaplotypeCaller {
     Boolean make_bamout
     Int hc_scatter
 
+    String? gcs_project_for_requester_pays
+
     String gatk_path
     String? java_options
 
@@ -218,6 +220,7 @@ task HaplotypeCaller {
       -G StandardAnnotation -G StandardHCAnnotation ~{true="-G AS_StandardAnnotation" false="" make_gvcf} \
       -GQB 10 -GQB 20 -GQB 30 -GQB 40 -GQB 50 -GQB 60 -GQB 70 -GQB 80 -GQB 90 \
       ~{true="-ERC GVCF" false="" make_gvcf} \
+      ~{true="--gcs-project-for-requester-pays ~{gcs_project_for_requester_pays}" false="" defined(gcs_project_for_requester_pays)} \
       ~{bamout_arg}
 
     # Cromwell doesn't like optional task outputs, so we have to touch this file.
