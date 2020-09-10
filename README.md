@@ -47,7 +47,7 @@ file with 50 or more GVCFs and produces a multisample VCF.
 - Samtools 1.3.1
 - Python 2.7
 - Cromwell version support 
-  - Successfully tested on v50
+  - Successfully tested on v53
 
 ### IMPORTANT NOTE : 
 - VQSR wiring. The SNP and INDEL models are built in parallel, but then the corresponding 
