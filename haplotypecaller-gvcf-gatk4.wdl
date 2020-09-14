@@ -40,7 +40,7 @@ workflow HaplotypeCallerGvcf_GATK4 {
   
     Boolean make_gvcf = true
     Boolean make_bamout = false
-    String gatk_docker = "broadinstitute/gatk:4.1.7.0"
+    String gatk_docker = "broadinstitute/gatk:4.1.8.1"
     String gatk_path = "/gatk/gatk"
     String gitc_docker = "broadinstitute/genomes-in-the-cloud:2.3.1-1500064817"
     String samtools_path = "samtools"
@@ -173,6 +173,8 @@ task HaplotypeCaller {
     Boolean make_bamout
     Int hc_scatter
 
+    String? gcs_project_for_requester_pays
+
     String gatk_path
     String? java_options
 
@@ -218,6 +220,7 @@ task HaplotypeCaller {
       -G StandardAnnotation -G StandardHCAnnotation ~{true="-G AS_StandardAnnotation" false="" make_gvcf} \
       -GQB 10 -GQB 20 -GQB 30 -GQB 40 -GQB 50 -GQB 60 -GQB 70 -GQB 80 -GQB 90 \
       ~{true="-ERC GVCF" false="" make_gvcf} \
+      ~{if defined(gcs_project_for_requester_pays) then "--gcs-project-for-requester-pays ~{gcs_project_for_requester_pays}" else ""} \
       ~{bamout_arg}
 
     # Cromwell doesn't like optional task outputs, so we have to touch this file.
