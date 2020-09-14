@@ -188,8 +188,6 @@ task HaplotypeCaller {
 
   String java_opt = select_first([java_options, "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10"]) 
 
-  #Boolean requster_pays = defined(gcs_project_for_requester_pays)
-
   Int machine_mem_gb = select_first([mem_gb, 7])
   Int command_mem_gb = machine_mem_gb - 1
 
