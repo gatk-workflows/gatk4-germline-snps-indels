@@ -1,6 +1,6 @@
 version 1.0
 
-## Copyright Broad Institute, 2019
+## Copyright Broad Institute, 2020
 ## 
 ## This WDL implements the joint discovery and VQSR filtering portion of the GATK 
 ## Best Practices (June 2016) for germline SNP and Indel discovery in human 
@@ -51,7 +51,7 @@ import "./tasks/JointGenotypingTasks.wdl" as Tasks
 # Joint Genotyping for hg38 Whole Genomes and Exomes (has not been tested on hg19)
 workflow JointGenotyping {
 
-  String pipeline_version = "1.2"
+  String pipeline_version = "1.3.0"
 
   input {
     File unpadded_intervals_file
@@ -497,5 +497,8 @@ workflow JointGenotyping {
 
     # Output the metrics from crosschecking fingerprints.
     File crosscheck_fingerprint_check = select_first([CrossCheckFingerprintSolo.crosscheck_metrics, GatherFingerprintingMetrics.gathered_metrics])
+  }
+  meta {
+    allowNestedInputs: true
   }
 }

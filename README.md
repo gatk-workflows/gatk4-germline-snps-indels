@@ -29,8 +29,8 @@ in human whole-genome sequencing (WGS). The workflow requires a sample map
 file with 50 or more GVCFs and produces a multisample VCF.
 
 *NOTE:*  
-*- To create a sample map use the [generate-sample-map](https://portal.firecloud.org/?return=terra#methods/gatk/generate-sample-map/1) workflow.*
-
+*- To create a sample map use the [generate-sample-map](https://portal.firecloud.org/?return=terra#methods/gatk/generate-sample-map/1) workflow.*  
+*- This workflow will soon be removed from this repo. Its new repository location will be [broadinstitute/warp](https://github.com/broadinstitute/warp)*
 
 #### Requirements/expectations
 - A sample map listing 50 or more GVCFs produced by HaplotypeCaller in GVCF mode.
