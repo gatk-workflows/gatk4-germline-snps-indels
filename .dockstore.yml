@@ -1,0 +1,7 @@
+version: 1.2
+workflows:
+   - name: haplotypecaller-gvcf-gatk4
+     subclass: WDL
+     primaryDescriptorPath: /haplotypecaller-gvcf-gatk4.wdl
+     testParameterFiles:
+     -  /haplotypecaller-gvcf-gatk4.hg38.wgs.inputs.json
