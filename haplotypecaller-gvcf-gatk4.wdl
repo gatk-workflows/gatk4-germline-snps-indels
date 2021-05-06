@@ -213,6 +213,7 @@ task HaplotypeCaller {
       HaplotypeCaller \
       -R ~{ref_fasta} \
       -I ~{input_bam} \
+      --read-index {input_bam_index}\
       -L ~{interval_list} \
       -O ~{output_filename} \
       -contamination ~{default="0" contamination} \
